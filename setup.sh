@@ -29,7 +29,8 @@ awslocal lambda create-function \
     --runtime python3.8 \
     --handler get_quiz_function.lambda_handler \
     --zip-file fileb://get_quiz_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole
+    --role arn:aws:iam::000000000000:role/DummyRole \
+    --timeout 30
 
 # CreateQuizFunction
 awslocal lambda create-function \
@@ -37,7 +38,8 @@ awslocal lambda create-function \
     --runtime python3.8 \
     --handler create_quiz_function.lambda_handler \
     --zip-file fileb://create_quiz_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole
+    --role arn:aws:iam::000000000000:role/DummyRole \
+    --timeout 30
 
 # SubmitQuizFunction
 awslocal lambda create-function \
@@ -45,7 +47,8 @@ awslocal lambda create-function \
     --runtime python3.8 \
     --handler submit_quiz_function.lambda_handler \
     --zip-file fileb://submit_quiz_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole
+    --role arn:aws:iam::000000000000:role/DummyRole \
+    --timeout 30
 
 # ScoringFunction
 awslocal lambda create-function \
@@ -53,7 +56,8 @@ awslocal lambda create-function \
     --runtime python3.8 \
     --handler scoring_function.lambda_handler \
     --zip-file fileb://scoring_function.zip \
-    --role arn:aws:iam::000000000000:role/DummyRole
+    --role arn:aws:iam::000000000000:role/DummyRole \
+    --timeout 30
 
 # SQS Trigger
 
@@ -179,7 +183,7 @@ curl -X POST "$API_ENDPOINT/createquiz" \
 
 # Get the quiz; Change the ID below
 
-curl -X GET "$API_ENDPOINT/getquiz?quiz_id=895cdc2c-89f5-4b8e-9eee-e2ccfaab4ac3"
+curl -X GET "$API_ENDPOINT/getquiz?quiz_id=b8299c58-9b85-4d20-af02-52ba1efb61cf"
 
 # Submit response
 
@@ -187,7 +191,7 @@ curl -X POST "$API_ENDPOINT/submitquiz" \
 -H "Content-Type: application/json" \
 -d '{
     "Username": "john_doe",
-    "QuizID": "895cdc2c-89f5-4b8e-9eee-e2ccfaab4ac3",
+    "QuizID": "b8299c58-9b85-4d20-af02-52ba1efb61cf",
     "Answers": {
         "0": "D",
         "1": "B"
@@ -198,4 +202,4 @@ curl -X POST "$API_ENDPOINT/submitquiz" \
 
 awslocal dynamodb get-item \
     --table-name UserSubmissions \
-    --key '{"SubmissionID": {"S": "96dc8c43-039a-45a7-a813-8031e2800f86"}}'
+    --key '{"SubmissionID": {"S": "ab96a784-1184-4db8-a26b-9892adbf939e"}}'
