@@ -203,3 +203,40 @@ curl -X POST "$API_ENDPOINT/submitquiz" \
 awslocal dynamodb get-item \
     --table-name UserSubmissions \
     --key '{"SubmissionID": {"S": "ab96a784-1184-4db8-a26b-9892adbf939e"}}'
+
+# SQS DLQ —> EventBridge Pipes —> SNS
+# To test this, add:
+# raise Exception("Simulated failure in ScoringFunction for testing SNS DLQ.")
+# in the `scoring_function.py` file and update the Lambda.
+
+SNS_TOPIC_ARN=$(awslocal sns create-topic --name DLQAlarmTopic --output json | jq -r '.TopicArn')
+DLQ_URL=$(awslocal sqs create-queue --queue-name QuizSubmissionDLQ --output json | jq -r '.QueueUrl')
+DLQ_ARN=$(awslocal sqs get-queue-attributes --queue-url $DLQ_URL --attribute-names QueueArn --query 'Attributes.QueueArn' --output text)
+
+awslocal sqs set-queue-attributes \
+    --queue-url $QUEUE_URL \
+    --attributes '{
+        "RedrivePolicy": "{\"deadLetterTargetArn\":\"'$DLQ_ARN'\",\"maxReceiveCount\":\"1\"}",
+        "VisibilityTimeout": "10"
+    }'
+
+awslocal ses verify-email-identity --email your.email@example.com
+
+awslocal sns subscribe \
+    --topic-arn $SNS_TOPIC_ARN \
+    --protocol email \
+    --notification-endpoint your.email@example.com
+
+awslocal pipes create-pipe \
+  --name DLQToSNSPipe \
+  --source $DLQ_ARN \
+  --target $SNS_TOPIC_ARN \
+  --role-arn arn:aws:iam::000000000000:role/DummyRole
+
+awslocal sqs send-message \
+    --queue-url $QUEUE_URL \
+    --message-body '{"test": "message"}'
+
+sleep 15
+
+curl -s http://localhost.localstack.cloud:4566/_aws/ses
