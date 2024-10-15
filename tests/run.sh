@@ -4,6 +4,7 @@ curl -X POST "$API_ENDPOINT/createquiz" \
 -H "Content-Type: application/json" \
 -d '{
     "Title": "Sample Quiz",
+    "Visibility": "Public",
     "Questions": [
         {
             "QuestionText": "What is the capital of France?",

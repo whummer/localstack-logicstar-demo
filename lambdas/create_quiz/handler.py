@@ -7,7 +7,10 @@ def lambda_handler(event, context):
         quiz_data = json.loads(event['body'])
         title = quiz_data['Title']
         questions = quiz_data['Questions']
-    except (KeyError, json.JSONDecodeError) as e:
+        visibility = quiz_data.get('Visibility', 'Private')
+        if visibility not in ('Public', 'Private'):
+            raise ValueError("Visibility must be 'Public' or 'Private'")
+    except (KeyError, json.JSONDecodeError, ValueError) as e:
         return {
             'statusCode': 400,
             'body': json.dumps({
@@ -30,6 +33,7 @@ def lambda_handler(event, context):
 
     quiz_id = str(random.randint(100000, 999999))
     quiz_data['QuizID'] = quiz_id
+    quiz_data['Visibility'] = visibility
 
     table.put_item(Item=quiz_data)
 
