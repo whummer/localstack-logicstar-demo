@@ -14,7 +14,7 @@ function LeaderboardPage() {
       return;
     }
 
-    fetch(`${process.env.REACT_APP_API_ENDPOINT}/getleaderboard?quiz_id=${quizID}&top=10`)
+    fetch(`${process.env.REACT_APP_API_ENDPOINT}/getleaderboard?quiz_id=${quizID}&top=3`)
     .then((res) => res.json())
     .then((data) => setLeaderboardData(data))
     .catch((err) => console.error(err));

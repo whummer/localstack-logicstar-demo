@@ -269,3 +269,16 @@ awslocal stepfunctions create-state-machine \
     --role-arn arn:aws:iam::000000000000:role/DummyRole
 
 echo $API_ENDPOINT
+
+pushd frontend
+npm install
+npm run build
+awslocal s3 mb s3://webapp
+awslocal s3 sync --delete ./build s3://webapp
+awslocal s3 website s3://webapp --index-document index.html --error-document index.html
+popd
+
+awslocal cloudfront create-distribution --distribution-config file://distribution-config.json
+DISTRIBUTION=$(awslocal cloudfront create-distribution --distribution-config file://distribution-config.json)
+DOMAIN_NAME=$(echo "$DISTRIBUTION" | jq -r '.Distribution.DomainName')
+echo $DOMAIN_NAME
