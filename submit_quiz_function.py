@@ -8,6 +8,7 @@ def lambda_handler(event, context):
         username = submission['Username']
         quiz_id = submission['QuizID']
         answers = submission['Answers']
+        email = submission.get('Email')
 
         if not username or not quiz_id or not answers:
             raise ValueError("Username, QuizID, and Answers are required.")
@@ -40,9 +41,11 @@ def lambda_handler(event, context):
         'SubmissionID': str(uuid.uuid4()),
         'Username': username,
         'QuizID': quiz_id,
-        'Answers': answers
+        'Answers': answers,
     }
 
+    if email:
+        message_body['Email'] = email
     try:
         sqs.send_message(
             QueueUrl=queue_url,

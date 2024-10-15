@@ -5,11 +5,11 @@ from boto3.dynamodb.conditions import Key
 def lambda_handler(event, context):
     try:
         quiz_id = event['queryStringParameters']['quiz_id']
-        top_n = int(event['queryStringParameters'].get('top_n', 10))
+        top = int(event['queryStringParameters'].get('top', 10))
     except (KeyError, TypeError, ValueError) as e:
         return {
             'statusCode': 400,
-            'body': json.dumps({'message': 'quiz_id is required and top_n should be an integer', 'error': str(e)})
+            'body': json.dumps({'message': 'quiz_id is required and top should be an integer', 'error': str(e)})
         }
 
     dynamodb = boto3.resource('dynamodb')
@@ -20,7 +20,7 @@ def lambda_handler(event, context):
             IndexName='QuizID-Score-index',
             KeyConditionExpression=Key('QuizID').eq(quiz_id),
             ScanIndexForward=False,
-            Limit=top_n
+            Limit=top
         )
         items = response.get('Items', [])
         leaderboard = [

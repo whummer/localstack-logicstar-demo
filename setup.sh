@@ -260,7 +260,7 @@ curl -X POST "$API_ENDPOINT/createquiz" \
 
 # Get the quiz; Change the ID below
 
-curl -X GET "$API_ENDPOINT/getquiz?quiz_id=ab31c52b-17e6-42ab-a6a0-a9cd7c76ba59"
+curl -X GET "$API_ENDPOINT/getquiz?quiz_id=d5dc66c8-a1d3-4824-b504-f2491e9bc5fb"
 
 # Submit responses
 
@@ -268,7 +268,7 @@ curl -X POST "$API_ENDPOINT/submitquiz" \
 -H "Content-Type: application/json" \
 -d '{
     "Username": "user1",
-    "QuizID": "ab31c52b-17e6-42ab-a6a0-a9cd7c76ba59",
+    "QuizID": "d5dc66c8-a1d3-4824-b504-f2491e9bc5fb",
     "Answers": {
         "0": "D. Paris",
         "1": "B. Shakespeare"
@@ -279,7 +279,7 @@ curl -X POST "$API_ENDPOINT/submitquiz" \
 -H "Content-Type: application/json" \
 -d '{
     "Username": "user2",
-    "QuizID": "ab31c52b-17e6-42ab-a6a0-a9cd7c76ba59",
+    "QuizID": "d5dc66c8-a1d3-4824-b504-f2491e9bc5fb",
     "Answers": {
         "0": "A. Berlin",
         "1": "B. Shakespeare"
@@ -290,7 +290,7 @@ curl -X POST "$API_ENDPOINT/submitquiz" \
 -H "Content-Type: application/json" \
 -d '{
     "Username": "user3",
-    "QuizID": "ab31c52b-17e6-42ab-a6a0-a9cd7c76ba59",
+    "QuizID": "d5dc66c8-a1d3-4824-b504-f2491e9bc5fb",
     "Answers": {
         "0": "D. Paris",
         "1": "D. Hemingway"
@@ -303,7 +303,7 @@ curl -X GET "$API_ENDPOINT/getsubmission?submission_id=102c1afb-9273-4a0f-956f-0
 
 # Get leaderboard
 
-curl -X GET "$API_ENDPOINT/getleaderboard?quiz_id=ab31c52b-17e6-42ab-a6a0-a9cd7c76ba59&top_n=3"
+curl -X GET "$API_ENDPOINT/getleaderboard?quiz_id=d5dc66c8-a1d3-4824-b504-f2491e9bc5fb&top=3"
 
 # SQS DLQ —> EventBridge Pipes —> SNS
 # To test this, add:
@@ -341,3 +341,22 @@ awslocal sqs send-message \
 sleep 15
 
 curl -s http://localhost.localstack.cloud:4566/_aws/ses
+
+# Step Functions
+
+awslocal stepfunctions create-state-machine \
+    --name SendEmailStateMachine \
+    --definition file://statemachine.json \
+    --role-arn arn:aws:iam::000000000000:role/DummyRole
+
+curl -X POST "$API_ENDPOINT/submitquiz" \
+-H "Content-Type: application/json" \
+-d '{
+    "Username": "user2",
+    "Email": "user@example.com",
+    "QuizID": "d5dc66c8-a1d3-4824-b504-f2491e9bc5fb",
+    "Answers": {
+        "0": "D. Paris",
+        "1": "B. Shakespeare"
+    }
+}'

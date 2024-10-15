@@ -6,6 +6,7 @@ def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb')
     quizzes_table = dynamodb.Table('Quizzes')
     submissions_table = dynamodb.Table('UserSubmissions')
+    stepfunctions = boto3.client('stepfunctions')
 
     for record in event['Records']:
         try:
@@ -14,6 +15,7 @@ def lambda_handler(event, context):
             username = message_body['Username']
             quiz_id = message_body['QuizID']
             user_answers = message_body['Answers']
+            email = message_body.get('Email')
 
             if not all([submission_id, username, quiz_id, user_answers]):
                 print(f"Invalid message data: {message_body}")
@@ -41,6 +43,22 @@ def lambda_handler(event, context):
                 'Score': Decimal(score),
                 'TotalQuestions': Decimal(total_questions)
             })
+
+            if email:
+                state_machine_arn = 'arn:aws:states:us-east-1:000000000000:stateMachine:SendEmailStateMachine'
+                input_data = {
+                    'SubmissionID': submission_id,
+                    'Username': username,
+                    'Email': email,
+                    'Score': score,
+                    'TotalQuestions': total_questions
+                }
+
+                stepfunctions.start_execution(
+                    stateMachineArn=state_machine_arn,
+                    input=json.dumps(input_data, default=str)
+                )
+
         except Exception as e:
             print(f"Error processing record {record}: {e}")
             continue
