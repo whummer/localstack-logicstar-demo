@@ -4,6 +4,7 @@ import HomePage from './components/HomePage';
 import QuizPage from './components/QuizPage';
 import ResultPage from './components/ResultPage';
 import LeaderboardPage from './components/LeaderboardPage';
+import QuizBuilder from './components/QuizBuilder';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/quiz" element={<QuizPage />} />
         <Route path="/result" element={<ResultPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/create-quiz" element={<QuizBuilder />} />
       </Routes>
     </Router>
   );

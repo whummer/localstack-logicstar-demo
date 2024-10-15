@@ -8,6 +8,7 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
+  Stack,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,7 +21,6 @@ function HomePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch public quizzes
     fetch(`${process.env.REACT_APP_API_ENDPOINT}/listquizzes`)
       .then((res) => res.json())
       .then((data) => {
@@ -49,6 +49,10 @@ function HomePage() {
   const handleQuizIDChange = (e) => {
     setQuizID(e.target.value);
     setSelectedQuizID('');
+  };
+
+  const handleCreateQuiz = () => {
+    navigate('/create-quiz');
   };
 
   return (
@@ -101,14 +105,24 @@ function HomePage() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleStart}
-        disabled={!quizID || !username}
-      >
-        Start Playing
-      </Button>
+
+      <Stack spacing={2} marginTop={4}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleStart}
+          disabled={!quizID || !username}
+        >
+          Start Playing
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleCreateQuiz}
+        >
+          Create a New Quiz
+        </Button>
+      </Stack>
     </Container>
   );
 }
