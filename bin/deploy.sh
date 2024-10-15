@@ -92,6 +92,10 @@ awslocal lambda create-function \
     --role arn:aws:iam::000000000000:role/DummyRole \
     --timeout 30
 
+# Delete ZIP files
+
+*.zip
+
 # SQS Trigger
 
 QUEUE_URL=$(awslocal sqs get-queue-url --queue-name QuizSubmissionQueue --query 'QueueUrl' --output text)
