@@ -29,14 +29,12 @@ awslocal dynamodb create-table \
 
 awslocal sqs create-queue --queue-name QuizSubmissionQueue
 
-# Package functions
-
-zip get_quiz_function.zip get_quiz_function.py
-zip create_quiz_function.zip create_quiz_function.py
-zip submit_quiz_function.zip submit_quiz_function.py
-zip scoring_function.zip scoring_function.py
-zip get_submission_function.zip get_submission_function.py
-zip get_leaderboard_function.zip get_leaderboard_function.py
+zip -j get_quiz_function.zip lambdas/get_quiz/handler.py
+zip -j create_quiz_function.zip lambdas/create_quiz/handler.py
+zip -j submit_quiz_function.zip lambdas/submit_quiz/handler.py
+zip -j scoring_function.zip lambdas/scoring/handler.py
+zip -j get_submission_function.zip lambdas/get_submission/handler.py
+zip -j get_leaderboard_function.zip lambdas/get_leaderboard/handler.py
 
 # Deploy Lambdas
 
@@ -44,7 +42,7 @@ zip get_leaderboard_function.zip get_leaderboard_function.py
 awslocal lambda create-function \
     --function-name GetQuizFunction \
     --runtime python3.8 \
-    --handler get_quiz_function.lambda_handler \
+    --handler handler.lambda_handler \
     --zip-file fileb://get_quiz_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
     --timeout 30
@@ -53,7 +51,7 @@ awslocal lambda create-function \
 awslocal lambda create-function \
     --function-name CreateQuizFunction \
     --runtime python3.8 \
-    --handler create_quiz_function.lambda_handler \
+    --handler handler.lambda_handler \
     --zip-file fileb://create_quiz_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
     --timeout 30
@@ -62,7 +60,7 @@ awslocal lambda create-function \
 awslocal lambda create-function \
     --function-name SubmitQuizFunction \
     --runtime python3.8 \
-    --handler submit_quiz_function.lambda_handler \
+    --handler handler.lambda_handler \
     --zip-file fileb://submit_quiz_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
     --timeout 30
@@ -71,7 +69,7 @@ awslocal lambda create-function \
 awslocal lambda create-function \
     --function-name ScoringFunction \
     --runtime python3.8 \
-    --handler scoring_function.lambda_handler \
+    --handler handler.lambda_handler \
     --zip-file fileb://scoring_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
     --timeout 30
@@ -80,7 +78,7 @@ awslocal lambda create-function \
 awslocal lambda create-function \
     --function-name GetSubmissionFunction \
     --runtime python3.8 \
-    --handler get_submission_function.lambda_handler \
+    --handler handler.lambda_handler \
     --zip-file fileb://get_submission_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
     --timeout 30
@@ -89,7 +87,7 @@ awslocal lambda create-function \
 awslocal lambda create-function \
     --function-name GetLeaderboardFunction \
     --runtime python3.8 \
-    --handler get_leaderboard_function.lambda_handler \
+    --handler handler.lambda_handler \
     --zip-file fileb://get_leaderboard_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
     --timeout 30
@@ -230,86 +228,13 @@ awslocal apigateway create-deployment \
     --rest-api-id $API_ID \
     --stage-name test
 
-# Get the ID and add it here
-
 API_ENDPOINT="http://localhost:4566/restapis/$API_ID/test/_user_request_"
 
-# Testing
-
-# Create a quiz
-
-curl -X POST "$API_ENDPOINT/createquiz" \
--H "Content-Type: application/json" \
--d '{
-    "Title": "Sample Quiz",
-    "Questions": [
-        {
-            "QuestionText": "What is the capital of France?",
-            "Options": ["A. Berlin", "B. London", "C. Madrid", "D. Paris"],
-            "CorrectAnswer": "D. Paris",
-            "Trivia": "Paris is known as the City of Light."
-        },
-        {
-            "QuestionText": "Who wrote Hamlet?",
-            "Options": ["A. Dickens", "B. Shakespeare", "C. Twain", "D. Hemingway"],
-            "CorrectAnswer": "B. Shakespeare",
-            "Trivia": "Shakespeare is often called England national poet."
-        }
-    ]
-}'
-
-# Get the quiz; Change the ID below
-
-curl -X GET "$API_ENDPOINT/getquiz?quiz_id=d5dc66c8-a1d3-4824-b504-f2491e9bc5fb"
-
-# Submit responses
-
-curl -X POST "$API_ENDPOINT/submitquiz" \
--H "Content-Type: application/json" \
--d '{
-    "Username": "user1",
-    "QuizID": "d5dc66c8-a1d3-4824-b504-f2491e9bc5fb",
-    "Answers": {
-        "0": "D. Paris",
-        "1": "B. Shakespeare"
-    }
-}'
-
-curl -X POST "$API_ENDPOINT/submitquiz" \
--H "Content-Type: application/json" \
--d '{
-    "Username": "user2",
-    "QuizID": "d5dc66c8-a1d3-4824-b504-f2491e9bc5fb",
-    "Answers": {
-        "0": "A. Berlin",
-        "1": "B. Shakespeare"
-    }
-}'
-
-curl -X POST "$API_ENDPOINT/submitquiz" \
--H "Content-Type: application/json" \
--d '{
-    "Username": "user3",
-    "QuizID": "d5dc66c8-a1d3-4824-b504-f2491e9bc5fb",
-    "Answers": {
-        "0": "D. Paris",
-        "1": "D. Hemingway"
-    }
-}'
-
-# Get submission
-
-curl -X GET "$API_ENDPOINT/getsubmission?submission_id=102c1afb-9273-4a0f-956f-004affa8441b"
-
-# Get leaderboard
-
-curl -X GET "$API_ENDPOINT/getleaderboard?quiz_id=d5dc66c8-a1d3-4824-b504-f2491e9bc5fb&top=3"
 
 # SQS DLQ —> EventBridge Pipes —> SNS
 # To test this, add:
 # raise Exception("Simulated failure in ScoringFunction for testing SNS DLQ.")
 # in the `scoring_function.py` file and update the Lambda.
-
 SNS_TOPIC_ARN=$(awslocal sns create-topic --name DLQAlarmTopic --output json | jq -r '.TopicArn')
 DLQ_URL=$(awslocal sqs create-queue --queue-name QuizSubmissionDLQ --output json | jq -r '.QueueUrl')
 DLQ_ARN=$(awslocal sqs get-queue-attributes --queue-url $DLQ_URL --attribute-names QueueArn --query 'Attributes.QueueArn' --output text)
@@ -334,29 +259,9 @@ awslocal pipes create-pipe \
   --target $SNS_TOPIC_ARN \
   --role-arn arn:aws:iam::000000000000:role/DummyRole
 
-awslocal sqs send-message \
-    --queue-url $QUEUE_URL \
-    --message-body '{"test": "message"}'
-
-sleep 15
-
-curl -s http://localhost.localstack.cloud:4566/_aws/ses
-
-# Step Functions
-
 awslocal stepfunctions create-state-machine \
     --name SendEmailStateMachine \
     --definition file://statemachine.json \
     --role-arn arn:aws:iam::000000000000:role/DummyRole
 
-curl -X POST "$API_ENDPOINT/submitquiz" \
--H "Content-Type: application/json" \
--d '{
-    "Username": "user2",
-    "Email": "user@example.com",
-    "QuizID": "d5dc66c8-a1d3-4824-b504-f2491e9bc5fb",
-    "Answers": {
-        "0": "D. Paris",
-        "1": "B. Shakespeare"
-    }
-}'
+echo $API_ENDPOINT
