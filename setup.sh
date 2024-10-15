@@ -8,8 +8,23 @@ awslocal dynamodb create-table \
 
 awslocal dynamodb create-table \
     --table-name UserSubmissions \
-    --attribute-definitions AttributeName=SubmissionID,AttributeType=S \
+    --attribute-definitions \
+        AttributeName=SubmissionID,AttributeType=S \
+        AttributeName=QuizID,AttributeType=S \
+        AttributeName=Score,AttributeType=N \
     --key-schema AttributeName=SubmissionID,KeyType=HASH \
+    --global-secondary-indexes \
+        '[
+            {
+                "IndexName": "QuizID-Score-index",
+                "KeySchema": [
+                    {"AttributeName": "QuizID", "KeyType": "HASH"},
+                    {"AttributeName": "Score", "KeyType": "RANGE"}
+                ],
+                "Projection": {"ProjectionType": "ALL"},
+                "ProvisionedThroughput": {"ReadCapacityUnits": 5, "WriteCapacityUnits": 5}
+            }
+        ]' \
     --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
 
 awslocal sqs create-queue --queue-name QuizSubmissionQueue
@@ -20,6 +35,8 @@ zip get_quiz_function.zip get_quiz_function.py
 zip create_quiz_function.zip create_quiz_function.py
 zip submit_quiz_function.zip submit_quiz_function.py
 zip scoring_function.zip scoring_function.py
+zip get_submission_function.zip get_submission_function.py
+zip get_leaderboard_function.zip get_leaderboard_function.py
 
 # Deploy Lambdas
 
@@ -56,6 +73,24 @@ awslocal lambda create-function \
     --runtime python3.8 \
     --handler scoring_function.lambda_handler \
     --zip-file fileb://scoring_function.zip \
+    --role arn:aws:iam::000000000000:role/DummyRole \
+    --timeout 30
+
+# GetSubmissionFunction
+awslocal lambda create-function \
+    --function-name GetSubmissionFunction \
+    --runtime python3.8 \
+    --handler get_submission_function.lambda_handler \
+    --zip-file fileb://get_submission_function.zip \
+    --role arn:aws:iam::000000000000:role/DummyRole \
+    --timeout 30
+
+# GetLeaderboardFunction
+awslocal lambda create-function \
+    --function-name GetLeaderboardFunction \
+    --runtime python3.8 \
+    --handler get_leaderboard_function.lambda_handler \
+    --zip-file fileb://get_leaderboard_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
     --timeout 30
 
@@ -147,6 +182,48 @@ awslocal apigateway put-integration \
     --integration-http-method POST \
     --uri arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:SubmitQuizFunction/invocations
 
+# Create GetSubmission endpoint
+RESOURCE_ID=$(awslocal apigateway create-resource \
+    --rest-api-id $API_ID \
+    --parent-id $PARENT_ID \
+    --path-part getsubmission \
+    --query 'id' --output text)
+
+awslocal apigateway put-method \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method GET \
+    --authorization-type "NONE"
+
+awslocal apigateway put-integration \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method GET \
+    --type AWS_PROXY \
+    --integration-http-method POST \
+    --uri arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:GetSubmissionFunction/invocations
+
+# Create GetLeaderboard endpoint
+RESOURCE_ID=$(awslocal apigateway create-resource \
+    --rest-api-id $API_ID \
+    --parent-id $PARENT_ID \
+    --path-part getleaderboard \
+    --query 'id' --output text)
+
+awslocal apigateway put-method \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method GET \
+    --authorization-type "NONE"
+
+awslocal apigateway put-integration \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method GET \
+    --type AWS_PROXY \
+    --integration-http-method POST \
+    --uri arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:GetLeaderboardFunction/invocations
+
 # Deploy
 
 awslocal apigateway create-deployment \
@@ -183,26 +260,50 @@ curl -X POST "$API_ENDPOINT/createquiz" \
 
 # Get the quiz; Change the ID below
 
-curl -X GET "$API_ENDPOINT/getquiz?quiz_id=b8299c58-9b85-4d20-af02-52ba1efb61cf"
+curl -X GET "$API_ENDPOINT/getquiz?quiz_id=ab31c52b-17e6-42ab-a6a0-a9cd7c76ba59"
 
-# Submit response
+# Submit responses
 
 curl -X POST "$API_ENDPOINT/submitquiz" \
 -H "Content-Type: application/json" \
 -d '{
-    "Username": "john_doe",
-    "QuizID": "b8299c58-9b85-4d20-af02-52ba1efb61cf",
+    "Username": "user1",
+    "QuizID": "ab31c52b-17e6-42ab-a6a0-a9cd7c76ba59",
     "Answers": {
-        "0": "D",
-        "1": "B"
+        "0": "D. Paris",
+        "1": "B. Shakespeare"
     }
 }'
 
-# Get the response
+curl -X POST "$API_ENDPOINT/submitquiz" \
+-H "Content-Type: application/json" \
+-d '{
+    "Username": "user2",
+    "QuizID": "ab31c52b-17e6-42ab-a6a0-a9cd7c76ba59",
+    "Answers": {
+        "0": "A. Berlin",
+        "1": "B. Shakespeare"
+    }
+}'
 
-awslocal dynamodb get-item \
-    --table-name UserSubmissions \
-    --key '{"SubmissionID": {"S": "ab96a784-1184-4db8-a26b-9892adbf939e"}}'
+curl -X POST "$API_ENDPOINT/submitquiz" \
+-H "Content-Type: application/json" \
+-d '{
+    "Username": "user3",
+    "QuizID": "ab31c52b-17e6-42ab-a6a0-a9cd7c76ba59",
+    "Answers": {
+        "0": "D. Paris",
+        "1": "D. Hemingway"
+    }
+}'
+
+# Get submission
+
+curl -X GET "$API_ENDPOINT/getsubmission?submission_id=102c1afb-9273-4a0f-956f-004affa8441b"
+
+# Get leaderboard
+
+curl -X GET "$API_ENDPOINT/getleaderboard?quiz_id=ab31c52b-17e6-42ab-a6a0-a9cd7c76ba59&top_n=3"
 
 # SQS DLQ —> EventBridge Pipes —> SNS
 # To test this, add:
