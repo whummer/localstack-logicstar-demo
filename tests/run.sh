@@ -21,6 +21,37 @@ curl -X POST "$API_ENDPOINT/createquiz" \
     ]
 }'
 
+curl -X POST "$API_ENDPOINT/createquiz" \
+-H "Content-Type: application/json" \
+-d $'{
+    "Title": "General Knowledge Quiz",
+    "Visibility": "Private",
+    "Questions": [
+        {
+            "QuestionText": "What is the largest planet in our solar system?",
+            "Options": ["A. Earth", "B. Mars", "C. Jupiter", "D. Saturn"],
+            "CorrectAnswer": "C. Jupiter",
+            "Trivia": "Jupiter is so large that all the other planets in the solar system could fit inside it."
+        },
+        {
+            "QuestionText": "Which element has the chemical symbol '\''O'\''?",
+            "Options": ["A. Gold", "B. Oxygen", "C. Silver", "D. Iron"],
+            "CorrectAnswer": "B. Oxygen",
+            "Trivia": "Oxygen makes up about 21% of the Earth'\''s atmosphere."
+        },
+        {
+            "QuestionText": "In which year did World War II end?",
+            "Options": ["A. 1943", "B. 1945", "C. 1947", "D. 1950"],
+            "CorrectAnswer": "B. 1945",
+            "Trivia": "The war ended with the surrender of Japan on September 2, 1945."
+        }
+    ]
+}'
+
+# List Quizzes; Private quiz is not listed
+
+curl -X GET "$API_ENDPOINT/listquizzes"
+
 # Get the quiz; Change the ID below
 
 curl -X GET "$API_ENDPOINT/getquiz?quiz_id=195167"

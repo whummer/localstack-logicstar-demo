@@ -1,16 +1,54 @@
-// HomePage.js
-import React, { useState } from 'react';
-import { TextField, Button, Container, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+  TextField,
+  Button,
+  Container,
+  Typography,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 function HomePage() {
   const [quizID, setQuizID] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [publicQuizzes, setPublicQuizzes] = useState([]);
+  const [selectedQuizID, setSelectedQuizID] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Fetch public quizzes
+    fetch(`${process.env.REACT_APP_API_ENDPOINT}/listquizzes`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Array.isArray(data.Quizzes) && data.Quizzes.length > 0) {
+          setPublicQuizzes(data.Quizzes);
+        } else {
+          setPublicQuizzes([]);
+        }
+      })
+      .catch((err) => {
+        console.error('Error fetching public quizzes:', err);
+        setPublicQuizzes([]);
+      });
+  }, []);
 
   const handleStart = () => {
     navigate('/quiz', { state: { quizID, username, email } });
+  };
+
+  const handleQuizSelect = (event) => {
+    const selectedQuizID = event.target.value;
+    setSelectedQuizID(selectedQuizID);
+    setQuizID(selectedQuizID);
+  };
+
+  const handleQuizIDChange = (e) => {
+    setQuizID(e.target.value);
+    setSelectedQuizID('');
   };
 
   return (
@@ -18,12 +56,36 @@ function HomePage() {
       <Typography variant="h4" gutterBottom>
         Enter Quiz Details
       </Typography>
+
+      {publicQuizzes.length > 0 ? (
+        <FormControl fullWidth margin="normal">
+          <InputLabel id="public-quiz-label">Select a Public Quiz</InputLabel>
+          <Select
+            labelId="public-quiz-label"
+            value={selectedQuizID}
+            label="Select a Public Quiz"
+            onChange={handleQuizSelect}
+          >
+            {publicQuizzes.map((quiz) => (
+              <MenuItem key={quiz.QuizID} value={quiz.QuizID}>
+                {quiz.Title}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      ) : (
+        <Typography variant="body1" gutterBottom>
+          No public quizzes are available.
+        </Typography>
+      )}
+
       <TextField
         label="Quiz ID"
         fullWidth
         margin="normal"
         value={quizID}
-        onChange={(e) => setQuizID(e.target.value)}
+        onChange={handleQuizIDChange}
+        disabled={selectedQuizID !== ''}
       />
       <TextField
         label="Username"

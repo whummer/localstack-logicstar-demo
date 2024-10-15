@@ -35,6 +35,7 @@ zip -j submit_quiz_function.zip lambdas/submit_quiz/handler.py
 zip -j scoring_function.zip lambdas/scoring/handler.py
 zip -j get_submission_function.zip lambdas/get_submission/handler.py
 zip -j get_leaderboard_function.zip lambdas/get_leaderboard/handler.py
+zip -j list_quizzes_function.zip lambdas/list_quizzes/handler.py
 
 # Deploy Lambdas
 
@@ -92,9 +93,14 @@ awslocal lambda create-function \
     --role arn:aws:iam::000000000000:role/DummyRole \
     --timeout 30
 
-# Delete ZIP files
-
-*.zip
+# ListQuizzes Function
+awslocal lambda create-function \
+    --function-name ListPublicQuizzesFunction \
+    --runtime python3.8 \
+    --handler handler.lambda_handler \
+    --zip-file fileb://list_quizzes_function.zip \
+    --role arn:aws:iam::000000000000:role/DummyRole \
+    --timeout 30
 
 # SQS Trigger
 
@@ -225,6 +231,28 @@ awslocal apigateway put-integration \
     --type AWS_PROXY \
     --integration-http-method POST \
     --uri arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:GetLeaderboardFunction/invocations
+
+# ListQuizzes endpoint
+
+RESOURCE_ID=$(awslocal apigateway create-resource \
+    --rest-api-id $API_ID \
+    --parent-id $PARENT_ID \
+    --path-part listquizzes \
+    --query 'id' --output text)
+
+awslocal apigateway put-method \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method GET \
+    --authorization-type "NONE"
+
+awslocal apigateway put-integration \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method GET \
+    --type AWS_PROXY \
+    --integration-http-method POST \
+    --uri arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:000000000000:function:ListPublicQuizzesFunction/invocations
 
 # Deploy
 
