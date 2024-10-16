@@ -4,7 +4,8 @@ awslocal dynamodb create-table \
     --table-name Quizzes \
     --attribute-definitions AttributeName=QuizID,AttributeType=S \
     --key-schema AttributeName=QuizID,KeyType=HASH \
-    --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
+    --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+    --output text
 
 awslocal dynamodb create-table \
     --table-name UserSubmissions \
@@ -25,7 +26,8 @@ awslocal dynamodb create-table \
                 "ProvisionedThroughput": {"ReadCapacityUnits": 5, "WriteCapacityUnits": 5}
             }
         ]' \
-    --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5
+    --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+    --output text
 
 awslocal sqs create-queue --queue-name QuizSubmissionQueue
 
@@ -46,7 +48,8 @@ awslocal lambda create-function \
     --handler handler.lambda_handler \
     --zip-file fileb://get_quiz_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
-    --timeout 30
+    --timeout 30 \
+    --output text
 
 # CreateQuizFunction
 awslocal lambda create-function \
@@ -55,7 +58,8 @@ awslocal lambda create-function \
     --handler handler.lambda_handler \
     --zip-file fileb://create_quiz_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
-    --timeout 30
+    --timeout 30 \
+    --output text
 
 # SubmitQuizFunction
 awslocal lambda create-function \
@@ -64,7 +68,8 @@ awslocal lambda create-function \
     --handler handler.lambda_handler \
     --zip-file fileb://submit_quiz_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
-    --timeout 30
+    --timeout 30 \
+    --output text
 
 # ScoringFunction
 awslocal lambda create-function \
@@ -73,7 +78,8 @@ awslocal lambda create-function \
     --handler handler.lambda_handler \
     --zip-file fileb://scoring_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
-    --timeout 30
+    --timeout 30 \
+    --output text
 
 # GetSubmissionFunction
 awslocal lambda create-function \
@@ -82,7 +88,8 @@ awslocal lambda create-function \
     --handler handler.lambda_handler \
     --zip-file fileb://get_submission_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
-    --timeout 30
+    --timeout 30 \
+    --output text
 
 # GetLeaderboardFunction
 awslocal lambda create-function \
@@ -91,7 +98,8 @@ awslocal lambda create-function \
     --handler handler.lambda_handler \
     --zip-file fileb://get_leaderboard_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
-    --timeout 30
+    --timeout 30 \
+    --output text
 
 # ListQuizzes Function
 awslocal lambda create-function \
@@ -100,7 +108,8 @@ awslocal lambda create-function \
     --handler handler.lambda_handler \
     --zip-file fileb://list_quizzes_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
-    --timeout 30
+    --timeout 30 \
+    --output text
 
 # SQS Trigger
 
@@ -306,7 +315,7 @@ awslocal s3 sync --delete ./build s3://webapp
 awslocal s3 website s3://webapp --index-document index.html --error-document index.html
 popd
 
-awslocal cloudfront create-distribution --distribution-config file://distribution-config.json
+awslocal cloudfront create-distribution --distribution-config file://distribution-config.json --output text
 DISTRIBUTION=$(awslocal cloudfront create-distribution --distribution-config file://distribution-config.json)
 DOMAIN_NAME=$(echo "$DISTRIBUTION" | jq -r '.Distribution.DomainName')
 echo $DOMAIN_NAME

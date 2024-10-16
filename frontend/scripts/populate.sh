@@ -2,6 +2,9 @@
 
 API_NAME="QuizAPI"
 
+# Check if AWS_ENDPOINT_URL is set, otherwise default to localhost:4566
+AWS_ENDPOINT_URL=${AWS_ENDPOINT_URL:-"http://localhost:4566"}
+
 API_ID=$(awslocal apigateway get-rest-apis \
   --query "items[?name=='$API_NAME'].id" \
   --output text)
@@ -11,7 +14,7 @@ if [ -z "$API_ID" ]; then
   exit 1
 fi
 
-API_ENDPOINT="http://localhost:4566/restapis/$API_ID/test/_user_request_"
+API_ENDPOINT="$AWS_ENDPOINT_URL/restapis/$API_ID/test/_user_request_"
 
 echo "REACT_APP_API_ENDPOINT=$API_ENDPOINT" > .env.local
 
