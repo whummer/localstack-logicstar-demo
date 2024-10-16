@@ -310,3 +310,6 @@ awslocal cloudfront create-distribution --distribution-config file://distributio
 DISTRIBUTION=$(awslocal cloudfront create-distribution --distribution-config file://distribution-config.json)
 DOMAIN_NAME=$(echo "$DISTRIBUTION" | jq -r '.Distribution.DomainName')
 echo $DOMAIN_NAME
+
+# Cleanup
+rm *.zip

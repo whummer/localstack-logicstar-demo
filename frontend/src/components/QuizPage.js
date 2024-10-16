@@ -8,6 +8,8 @@ import {
   FormControlLabel,
   Radio,
   Button,
+  CircularProgress,
+  Box,
 } from '@mui/material';
 
 function QuizPage() {
@@ -16,6 +18,7 @@ function QuizPage() {
   const { quizID, username, email } = state || {};
   const [quizData, setQuizData] = useState(null);
   const [answers, setAnswers] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!quizID || !username) {
@@ -24,9 +27,9 @@ function QuizPage() {
     }
 
     fetch(`${process.env.REACT_APP_API_ENDPOINT}/getquiz?quiz_id=${quizID}`)
-    .then((res) => res.json())
-    .then((data) => setQuizData(data))
-    .catch((err) => console.error(err));
+      .then((res) => res.json())
+      .then((data) => setQuizData(data))
+      .catch((err) => console.error(err));
   }, [quizID, username, navigate]);
 
   const handleOptionChange = (questionIndex, option) => {
@@ -43,6 +46,8 @@ function QuizPage() {
       submissionData.Email = email;
     }
 
+    setSubmitting(true); // Start submitting
+
     fetch(`${process.env.REACT_APP_API_ENDPOINT}/submitquiz`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -50,15 +55,27 @@ function QuizPage() {
     })
       .then((res) => res.json())
       .then((data) => {
+        setSubmitting(false); // Submission complete
         navigate('/result', {
           state: { submissionID: data.SubmissionID, quizID },
         });
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        setSubmitting(false);
+        alert('Failed to submit quiz. Please try again.');
+      });
   };
 
   if (!quizData) {
-    return <Typography>Loading...</Typography>;
+    return (
+      <Container maxWidth="md" sx={{ textAlign: 'center', marginTop: 8 }}>
+        <CircularProgress />
+        <Typography variant="h6" sx={{ marginTop: 2 }}>
+          Loading quiz...
+        </Typography>
+      </Container>
+    );
   }
 
   return (
@@ -87,14 +104,24 @@ function QuizPage() {
           </RadioGroup>
         </div>
       ))}
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleSubmit}
-        disabled={Object.keys(answers).length !== quizData.Questions.length}
-      >
-        Submit
-      </Button>
+      {submitting ? (
+        <Box sx={{ textAlign: 'center', marginTop: 4 }}>
+          <CircularProgress />
+          <Typography variant="h6" sx={{ marginTop: 2 }}>
+            Submitting your answers...
+          </Typography>
+        </Box>
+      ) : (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSubmit}
+          disabled={Object.keys(answers).length !== quizData.Questions.length}
+          sx={{ marginTop: 4 }}
+        >
+          Submit
+        </Button>
+      )}
     </Container>
   );
 }

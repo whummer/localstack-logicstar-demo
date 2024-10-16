@@ -2,8 +2,7 @@
 
 API_NAME="QuizAPI"
 
-API_ID=$(aws apigateway get-rest-apis \
-  --endpoint-url=http://localhost:4566 \
+API_ID=$(awslocal apigateway get-rest-apis \
   --query "items[?name=='$API_NAME'].id" \
   --output text)
 
