@@ -30,5 +30,7 @@ jobs:
           preview-cmd: |
             pip install awscli awscli-local
             bash bin/deploy.sh
+            distributionId=$(awslocal cloudfront list-distributions | jq -r '.DistributionList.Items[0].Id');
+            echo LS_PREVIEW_URL=$AWS_ENDPOINT_URL/cloudfront/$distributionId/ >> $GITHUB_ENV;
         env:
           LOCALSTACK_API_KEY: ${{ secrets.LOCALSTACK_API_KEY }}
