@@ -1,7 +1,6 @@
 import json
 import boto3
 import random
-import math
 
 class IdSentence:
     """Generate human-readable IDs composed of adjectives, nouns, and verbs."""
@@ -103,37 +102,35 @@ def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('Quizzes')
     id_sentence = IdSentence()
-
-    max_attempts = 5
-    attempt = 0
-    quiz_id = None
-
-    while attempt < max_attempts:
-        adjective = random.choice(id_sentence.adjectives)
-        noun = random.choice(id_sentence.nouns)
-        verb = random.choice(id_sentence.verbs)
-        quiz_id = f"{adjective}-{noun}-{verb}"
-
-        existing_quiz = table.get_item(Key={'QuizID': quiz_id})
-        if 'Item' not in existing_quiz:
-            break
-        attempt += 1
-        quiz_id = None
-
-    if not quiz_id:
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'message': 'Failed to generate a unique QuizID. Please try again.'})
-        }
-
+    adjective = random.choice(id_sentence.adjectives)
+    noun = random.choice(id_sentence.nouns)
+    verb = random.choice(id_sentence.verbs)
+    quiz_id = f"{adjective}-{noun}-{verb}"
     quiz_data['QuizID'] = quiz_id
     quiz_data['Visibility'] = visibility
     try:
         table.put_item(Item=quiz_data)
     except Exception as e:
+        message = {
+            'TableName': 'Quizzes',
+            'Item': quiz_data
+        }
+        print(f"Attempting to publish failed write to SNS: {message}")
+        sns = boto3.client('sns')
+        try:
+            sns.publish(
+                TopicArn='arn:aws:sns:us-east-1:000000000000:QuizzesWriteFailures',
+                Message=json.dumps(message)
+            )
+            print(f"Published failed write to SNS: {e}")
+        except Exception as sns_e:
+            print(f"Failed to publish to SNS: {sns_e}")
         return {
             'statusCode': 500,
-            'body': json.dumps({'message': 'Error storing quiz data', 'error': str(e)})
+            'body': json.dumps({
+                'message': 'Error storing quiz data. It has been queued for retry.',
+                'error': str(e)
+            })
         }
 
     return {

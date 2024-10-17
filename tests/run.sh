@@ -103,3 +103,22 @@ curl -X GET "$API_ENDPOINT/getleaderboard?quiz_id=195167&top=3"
 
 # Check SES
 curl -s http://localhost.localstack.cloud:4566/_aws/ses
+
+# Chaos
+
+awslocal sqs receive-message --queue-url $WRITE_FAILURES_QUEUE_URL --max-number-of-messages 10 --wait-time-seconds 5
+
+curl -X POST "$API_ENDPOINT/createquiz" \
+-H "Content-Type: application/json" \
+-d '{
+    "Title": "Check Quiz",
+    "Visibility": "Public",
+    "Questions": [
+        {
+            "QuestionText": "What is the capital of Spain?",
+            "Options": ["A. Lisbon", "B. Madrid", "C. Barcelona", "D. Valencia"],
+            "CorrectAnswer": "B. Madrid",
+            "Trivia": "Madrid is the capital and largest city of Spain."
+        }
+    ]
+}'

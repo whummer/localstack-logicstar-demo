@@ -38,6 +38,7 @@ zip -j scoring_function.zip lambdas/scoring/handler.py
 zip -j get_submission_function.zip lambdas/get_submission/handler.py
 zip -j get_leaderboard_function.zip lambdas/get_leaderboard/handler.py
 zip -j list_quizzes_function.zip lambdas/list_quizzes/handler.py
+zip -j retry_quizzes_writes_function.zip lambdas/retry_quizzes_writes/handler.py
 
 # Deploy Lambdas
 
@@ -107,6 +108,16 @@ awslocal lambda create-function \
     --runtime python3.8 \
     --handler handler.lambda_handler \
     --zip-file fileb://list_quizzes_function.zip \
+    --role arn:aws:iam::000000000000:role/DummyRole \
+    --timeout 30 \
+    --output text
+
+# Retry Quiz Writes
+awslocal lambda create-function \
+    --function-name RetryQuizzesWritesFunction \
+    --runtime python3.8 \
+    --handler handler.lambda_handler \
+    --zip-file fileb://retry_quizzes_writes_function.zip \
     --role arn:aws:iam::000000000000:role/DummyRole \
     --timeout 30 \
     --output text
@@ -319,6 +330,25 @@ awslocal cloudfront create-distribution --distribution-config file://distributio
 DISTRIBUTION=$(awslocal cloudfront create-distribution --distribution-config file://distribution-config.json)
 DOMAIN_NAME=$(echo "$DISTRIBUTION" | jq -r '.Distribution.DomainName')
 echo $DOMAIN_NAME
+
+# Chaos Setup
+awslocal sns create-topic --name QuizzesWriteFailures --output json
+
+WRITE_FAILURES_QUEUE_URL=$(awslocal sqs create-queue --queue-name QuizzesWriteFailuresQueue --attributes VisibilityTimeout=60 --output json | jq -r '.QueueUrl')
+WRITE_FAILURES_QUEUE_ARN=$(awslocal sqs get-queue-attributes --queue-url $WRITE_FAILURES_QUEUE_URL --attribute-names QueueArn --query 'Attributes.QueueArn' --output text)
+
+awslocal sns subscribe \
+    --topic-arn arn:aws:sns:us-east-1:000000000000:QuizzesWriteFailures \
+    --protocol sqs \
+    --notification-endpoint $WRITE_FAILURES_QUEUE_ARN \
+    --output text
+
+awslocal lambda create-event-source-mapping \
+    --function-name RetryQuizzesWritesFunction \
+    --batch-size 10 \
+    --event-source-arn $WRITE_FAILURES_QUEUE_ARN \
+    --enabled \
+    --output text
 
 # Cleanup
 rm *.zip

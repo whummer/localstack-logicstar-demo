@@ -15,6 +15,7 @@ import {
   CardContent,
   Grid,
   Stack,
+  Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,6 +29,9 @@ function QuizBuilder() {
     CorrectAnswer: '',
     Trivia: '',
   });
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleOptionChange = (index, value) => {
@@ -44,10 +48,11 @@ function QuizBuilder() {
       Options.some((opt) => !opt.trim()) ||
       !CorrectAnswer.trim()
     ) {
-      alert('Please fill all fields and select a correct answer.');
+      setErrorMessage('Please fill all fields and select a correct answer.');
       return;
     }
     setQuestions([...questions, currentQuestion]);
+    setErrorMessage('');
     // Reset current question
     setCurrentQuestion({
       QuestionText: '',
@@ -59,7 +64,7 @@ function QuizBuilder() {
 
   const handleSubmitQuiz = () => {
     if (!title.trim() || questions.length === 0) {
-      alert('Please provide a title and add at least one question.');
+      setErrorMessage('Please provide a title and add at least one question.');
       return;
     }
 
@@ -69,19 +74,42 @@ function QuizBuilder() {
       Questions: questions,
     };
 
+    setIsSubmitting(true); // Start submission
+
     fetch(`${process.env.REACT_APP_API_ENDPOINT}/createquiz`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(quizData),
     })
-      .then((res) => res.json())
-      .then((data) => {
-        alert(`Quiz created successfully! Quiz ID: ${data.QuizID}`);
-        navigate('/');
+      .then(async (res) => {
+        const contentType = res.headers.get('Content-Type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Invalid response from server.');
+        }
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          const errorMsg = data.message || 'Failed to create quiz.';
+          throw new Error(errorMsg);
+        }
+
+        if (data.QuizID) {
+          setSuccessMessage(`Quiz created successfully! Quiz ID: ${data.QuizID}`);
+          // Optionally, navigate to another page after a short delay
+          setTimeout(() => {
+            navigate('/');
+          }, 2000);
+        } else {
+          throw new Error('Quiz ID not returned from server.');
+        }
       })
       .catch((err) => {
         console.error('Error creating quiz:', err);
-        alert('Failed to create quiz.');
+        setErrorMessage(err.message);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
   };
 
@@ -90,6 +118,18 @@ function QuizBuilder() {
       <Typography variant="h4" gutterBottom>
         Create a New Quiz
       </Typography>
+
+      {errorMessage && (
+        <Alert severity="error" sx={{ marginBottom: 2 }}>
+          {errorMessage}
+        </Alert>
+      )}
+
+      {successMessage && (
+        <Alert severity="success" sx={{ marginBottom: 2 }}>
+          {successMessage}
+        </Alert>
+      )}
 
       <TextField
         label="Quiz Title"
@@ -223,8 +263,9 @@ function QuizBuilder() {
           variant="contained"
           color="success"
           onClick={handleSubmitQuiz}
+          disabled={isSubmitting}
         >
-          Submit Quiz
+          {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
         </Button>
         <Button variant="outlined" onClick={() => navigate('/')}>
           Cancel
