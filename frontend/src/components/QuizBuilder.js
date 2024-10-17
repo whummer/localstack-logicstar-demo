@@ -35,6 +35,7 @@ function QuizBuilder() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quizID, setQuizID] = useState(null);
   const navigate = useNavigate();
 
   const handleOptionChange = (index, value) => {
@@ -84,7 +85,8 @@ function QuizBuilder() {
       Questions: questions,
     };
 
-    setIsSubmitting(true); // Start submission
+    setIsSubmitting(true);
+    setErrorMessage('');
 
     fetch(`${process.env.REACT_APP_API_ENDPOINT}/createquiz`, {
       method: 'POST',
@@ -105,11 +107,19 @@ function QuizBuilder() {
         }
 
         if (data.QuizID) {
+          setQuizID(data.QuizID);
           setSuccessMessage(`Quiz created successfully! Quiz ID: ${data.QuizID}`);
-          // Optionally, navigate to another page after a short delay
-          setTimeout(() => {
-            navigate('/');
-          }, 2000);
+          setTitle('');
+          setVisibility('Public');
+          setEnableTimer(false);
+          setTimerSeconds(30);
+          setQuestions([]);
+          setCurrentQuestion({
+            QuestionText: '',
+            Options: ['', '', '', ''],
+            CorrectAnswer: '',
+            Trivia: '',
+          });
         } else {
           throw new Error('Quiz ID not returned from server.');
         }
@@ -121,6 +131,15 @@ function QuizBuilder() {
       .finally(() => {
         setIsSubmitting(false);
       });
+  };
+
+  const handleGoHome = () => {
+    navigate('/');
+  };
+
+  const handleCreateAnotherQuiz = () => {
+    setSuccessMessage('');
+    setQuizID(null);
   };
 
   return (
@@ -141,170 +160,183 @@ function QuizBuilder() {
         </Alert>
       )}
 
-      <TextField
-        label="Quiz Title"
-        fullWidth
-        margin="normal"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
-
-      <FormControl fullWidth margin="normal">
-        <InputLabel id="visibility-label">Visibility</InputLabel>
-        <Select
-          labelId="visibility-label"
-          value={visibility}
-          label="Visibility"
-          onChange={(e) => setVisibility(e.target.value)}
-        >
-          <MenuItem value="Public">Public</MenuItem>
-          <MenuItem value="Private">Private</MenuItem>
-        </Select>
-      </FormControl>
-
-      <FormControlLabel
-        control={
-          <Switch
-            checked={enableTimer}
-            onChange={(e) => setEnableTimer(e.target.checked)}
-            color="primary"
-          />
-        }
-        label="Enable Timer"
-        sx={{ marginTop: 2 }}
-      />
-
-      {enableTimer && (
-        <TextField
-          label="Timer Seconds per Question"
-          type="number"
-          fullWidth
-          margin="normal"
-          value={timerSeconds}
-          onChange={(e) => setTimerSeconds(parseInt(e.target.value, 10))}
-          inputProps={{ min: 1 }}
-        />
-      )}
-
-      <Card variant="outlined" sx={{ marginTop: 4 }}>
-        <CardContent>
-          <Typography variant="h5" gutterBottom>
-            Add a Question
-          </Typography>
-
+      {quizID ? (
+        <Stack spacing={2} marginTop={4}>
+          <Button variant="contained" color="primary" onClick={handleGoHome}>
+            Go to Home
+          </Button>
+          <Button variant="outlined" onClick={handleCreateAnotherQuiz}>
+            Create Another Quiz
+          </Button>
+        </Stack>
+      ) : (
+        <>
           <TextField
-            label="Question Text"
+            label="Quiz Title"
             fullWidth
             margin="normal"
-            value={currentQuestion.QuestionText}
-            onChange={(e) =>
-              setCurrentQuestion({
-                ...currentQuestion,
-                QuestionText: e.target.value,
-              })
-            }
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
           />
 
-          <Grid container spacing={2}>
-            {currentQuestion.Options.map((option, index) => (
-              <Grid item xs={12} sm={6} key={index}>
-                <TextField
-                  label={`Option ${index + 1}`}
-                  fullWidth
-                  value={option}
-                  onChange={(e) => handleOptionChange(index, e.target.value)}
-                />
-              </Grid>
-            ))}
-          </Grid>
-
-          <FormControl component="fieldset" margin="normal">
-            <Typography variant="subtitle1">Correct Answer</Typography>
-            <RadioGroup
-              value={currentQuestion.CorrectAnswer}
-              onChange={(e) =>
-                setCurrentQuestion({
-                  ...currentQuestion,
-                  CorrectAnswer: e.target.value,
-                })
-              }
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="visibility-label">Visibility</InputLabel>
+            <Select
+              labelId="visibility-label"
+              value={visibility}
+              label="Visibility"
+              onChange={(e) => setVisibility(e.target.value)}
             >
-              {currentQuestion.Options.map((option, index) => (
-                <FormControlLabel
-                  key={index}
-                  value={option}
-                  control={<Radio />}
-                  label={`Option ${index + 1}`}
-                  disabled={!option.trim()}
-                />
-              ))}
-            </RadioGroup>
+              <MenuItem value="Public">Public</MenuItem>
+              <MenuItem value="Private">Private</MenuItem>
+            </Select>
           </FormControl>
 
-          <TextField
-            label="Trivia (Optional)"
-            fullWidth
-            margin="normal"
-            value={currentQuestion.Trivia}
-            onChange={(e) =>
-              setCurrentQuestion({ ...currentQuestion, Trivia: e.target.value })
+          <FormControlLabel
+            control={
+              <Switch
+                checked={enableTimer}
+                onChange={(e) => setEnableTimer(e.target.checked)}
+                color="primary"
+              />
             }
+            label="Enable Timer"
+            sx={{ marginTop: 2 }}
           />
 
-          <Stack direction="row" spacing={2} marginTop={2}>
+          {enableTimer && (
+            <TextField
+              label="Timer Seconds per Question"
+              type="number"
+              fullWidth
+              margin="normal"
+              value={timerSeconds}
+              onChange={(e) => setTimerSeconds(parseInt(e.target.value, 10))}
+              inputProps={{ min: 1 }}
+            />
+          )}
+
+          <Card variant="outlined" sx={{ marginTop: 4 }}>
+            <CardContent>
+              <Typography variant="h5" gutterBottom>
+                Add a Question
+              </Typography>
+
+              <TextField
+                label="Question Text"
+                fullWidth
+                margin="normal"
+                value={currentQuestion.QuestionText}
+                onChange={(e) =>
+                  setCurrentQuestion({
+                    ...currentQuestion,
+                    QuestionText: e.target.value,
+                  })
+                }
+              />
+
+              <Grid container spacing={2}>
+                {currentQuestion.Options.map((option, index) => (
+                  <Grid item xs={12} sm={6} key={index}>
+                    <TextField
+                      label={`Option ${index + 1}`}
+                      fullWidth
+                      value={option}
+                      onChange={(e) => handleOptionChange(index, e.target.value)}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+
+              <FormControl component="fieldset" margin="normal">
+                <Typography variant="subtitle1">Correct Answer</Typography>
+                <RadioGroup
+                  value={currentQuestion.CorrectAnswer}
+                  onChange={(e) =>
+                    setCurrentQuestion({
+                      ...currentQuestion,
+                      CorrectAnswer: e.target.value,
+                    })
+                  }
+                >
+                  {currentQuestion.Options.map((option, index) => (
+                    <FormControlLabel
+                      key={index}
+                      value={option}
+                      control={<Radio />}
+                      label={`Option ${index + 1}`}
+                      disabled={!option.trim()}
+                    />
+                  ))}
+                </RadioGroup>
+              </FormControl>
+
+              <TextField
+                label="Trivia (Optional)"
+                fullWidth
+                margin="normal"
+                value={currentQuestion.Trivia}
+                onChange={(e) =>
+                  setCurrentQuestion({ ...currentQuestion, Trivia: e.target.value })
+                }
+              />
+
+              <Stack direction="row" spacing={2} marginTop={2}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleAddQuestion}
+                >
+                  Add Question
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={() =>
+                    setCurrentQuestion({
+                      QuestionText: '',
+                      Options: ['', '', '', ''],
+                      CorrectAnswer: '',
+                      Trivia: '',
+                    })
+                  }
+                >
+                  Clear
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+
+          {questions.length > 0 && (
+            <Card variant="outlined" sx={{ marginTop: 4 }}>
+              <CardContent>
+                <Typography variant="h5" gutterBottom>
+                  Questions Added ({questions.length})
+                </Typography>
+                {questions.map((question, index) => (
+                  <Typography key={index} variant="body1" gutterBottom>
+                    {index + 1}. {question.QuestionText}
+                  </Typography>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          <Stack spacing={2} marginTop={4}>
             <Button
               variant="contained"
-              color="primary"
-              onClick={handleAddQuestion}
+              color="success"
+              onClick={handleSubmitQuiz}
+              disabled={isSubmitting}
             >
-              Add Question
+              {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
             </Button>
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() =>
-                setCurrentQuestion({
-                  QuestionText: '',
-                  Options: ['', '', '', ''],
-                  CorrectAnswer: '',
-                  Trivia: '',
-                })
-              }
-            >
-              Clear
+            <Button variant="outlined" onClick={() => navigate('/')}>
+              Cancel
             </Button>
           </Stack>
-        </CardContent>
-      </Card>
-
-      {questions.length > 0 && (
-        <Card variant="outlined" sx={{ marginTop: 4 }}>
-          <CardContent>
-            <Typography variant="h5" gutterBottom>
-              Questions Added ({questions.length})
-            </Typography>
-            {questions.map((question, index) => (
-              <Typography key={index} variant="body1" gutterBottom>
-                {index + 1}. {question.QuestionText}
-              </Typography>
-            ))}
-          </CardContent>
-        </Card>
+        </>
       )}
-
-      <Stack spacing={2} marginTop={4}>
-        <Button
-          variant="contained"
-          color="success"
-          onClick={handleSubmitQuiz}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
-        </Button>
-        <Button variant="outlined" onClick={() => navigate('/')}>
-          Cancel
-        </Button>
-      </Stack>
     </Container>
   );
 }
