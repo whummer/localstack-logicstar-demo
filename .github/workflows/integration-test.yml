@@ -20,7 +20,8 @@ on:
 
 
 jobs:
-  run-it-tests-job:
+  integration-test-job:
+    name: Run integration tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,14 +56,23 @@ jobs:
         run: |
           bash bin/deploy.sh
 
-      - name: Run Tests
+      - name: Run Integration Tests
         env:
           AWS_DEFAULT_REGION: us-east-1
           AWS_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
         run: |
-          pytest -v
+          pytest tests/test_infra.py
+
+      - name: Run Outages Tests
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        run: |
+          pytest tests/test_outage.py
 
       - name: Show localstack logs
         if: always()
