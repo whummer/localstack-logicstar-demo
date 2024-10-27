@@ -9,6 +9,7 @@ import {
   InputLabel,
   FormControl,
   Stack,
+  Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -18,6 +19,7 @@ function HomePage() {
   const [email, setEmail] = useState('');
   const [publicQuizzes, setPublicQuizzes] = useState([]);
   const [selectedQuizID, setSelectedQuizID] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,7 +38,18 @@ function HomePage() {
       });
   }, []);
 
+  const validateEmail = (email) => {
+    if (!email) return true;
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
   const handleStart = () => {
+    if (!validateEmail(email)) {
+      setErrorMessage('Please enter a valid email address.');
+      return;
+    }
+    setErrorMessage('');
     navigate('/quiz', { state: { quizID, username, email } });
   };
 
@@ -60,6 +73,12 @@ function HomePage() {
       <Typography variant="h4" gutterBottom>
         Enter Quiz Details
       </Typography>
+
+      {errorMessage && (
+        <Alert severity="error" sx={{ marginBottom: 2 }}>
+          {errorMessage}
+        </Alert>
+      )}
 
       {publicQuizzes.length > 0 ? (
         <FormControl fullWidth margin="normal">
