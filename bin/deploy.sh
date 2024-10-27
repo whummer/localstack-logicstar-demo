@@ -3,6 +3,8 @@
 set -e
 set -o pipefail
 
+AWS_ENDPOINT_URL=${AWS_ENDPOINT_URL:-"http://localhost:4566"}
+
 # Colors for logging
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
