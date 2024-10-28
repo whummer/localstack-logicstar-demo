@@ -34,7 +34,6 @@ else
 fi
 
 ENDPOINT_URL=$(echo "$CREATE_RESPONSE" | jq -r '.endpoint_url')
-echo "Endpoint URL: $ENDPOINT_URL"
 
 export AWS_ENDPOINT_URL="$ENDPOINT_URL"
 export ENDPOINT_URL="$ENDPOINT_URL"
