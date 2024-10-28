@@ -14,6 +14,8 @@ This project showcases a fully serverless quiz application designed to demonstra
 
 ## Architecture
 
+![Application Architecture](images/architecture.png)
+
 The following resources are being deployed:
 
 -   **DynamoDB**: Stores quiz metadata in `Quizzes` and user data in `UserSubmissions` with indexing for leaderboards.
