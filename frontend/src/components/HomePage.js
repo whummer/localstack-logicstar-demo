@@ -70,8 +70,7 @@ function HomePage() {
     navigate('/create-quiz');
   };
 
-  // Get the current page URL
-  const pageURL = window.location.href;
+  const pageURL = 'https://demo.localstack.cloud/';
 
   return (
     <Container maxWidth="sm">
