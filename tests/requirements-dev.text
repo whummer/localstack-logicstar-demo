@@ -1,3 +1,4 @@
 requests 
 boto3 
 pytest
+localstack-sdk-python

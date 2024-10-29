@@ -1,16 +1,25 @@
 import pytest
 import time
 import boto3
-import requests
 import json
+import requests
 
-LOCALSTACK_ENDPOINT = "http://localhost:4566"
-CHAOS_ENDPOINT = f"{LOCALSTACK_ENDPOINT}/_localstack/chaos/faults"
+import localstack.sdk.chaos
+from localstack.sdk.models import FaultRule
+from localstack.sdk.chaos.managers import fault_configuration
+
+LOCALSTACK_ENDPOINT = "http://localhost.localstack.cloud:4566"
 API_NAME = 'QuizAPI'
 
+class TestLocalStackClient:
+    client = localstack.sdk.chaos.ChaosClient()
+
 @pytest.fixture(scope='module')
-def api_endpoint():
-    apigateway_client = boto3.client('apigateway', endpoint_url=LOCALSTACK_ENDPOINT)
+def apigateway_client():
+    return boto3.client('apigateway', endpoint_url=LOCALSTACK_ENDPOINT)
+
+@pytest.fixture(scope='module')
+def api_endpoint(apigateway_client):
     response = apigateway_client.get_rest_apis()
     api_list = response.get('items', [])
     api = next((item for item in api_list if item['name'] == API_NAME), None)
@@ -27,29 +36,14 @@ def api_endpoint():
 
     return API_ENDPOINT
 
-def initiate_dynamodb_outage():
-    outage_payload = [{"service": "dynamodb", "region": "us-east-1"}]
-    response = requests.post(CHAOS_ENDPOINT, json=outage_payload)
-    assert response.ok, "Failed to initiate DynamoDB outage"
-    print("DynamoDB outage initiated.")
-    return outage_payload
-
-def check_outage_status(expected_status):
-    response = requests.get(CHAOS_ENDPOINT)
-    assert response.ok, "Failed to get outage status"
-    outage_status = response.json()
-    assert outage_status == expected_status, "Outage status does not match expected status"
-
-def stop_dynamodb_outage():
-    response = requests.post(CHAOS_ENDPOINT, json=[])
-    assert response.ok, "Failed to stop DynamoDB outage"
-    check_outage_status([])
-    print("DynamoDB outage stopped.")
-
 def test_dynamodb_outage(api_endpoint):
-    outage_payload = initiate_dynamodb_outage()
-
-    try:
+    outage_rule = FaultRule(region="us-east-1", service="dynamodb")
+    
+    # Using fault_configuration context manager to apply and automatically clean up the fault rule
+    with fault_configuration(fault_rules=[outage_rule]):
+        print("DynamoDB outage initiated within context.")
+        
+        # Attempt to create a quiz during the outage
         create_quiz_payload = {
             "Title": "Outage Test Quiz",
             "Visibility": "Public",
@@ -70,19 +64,17 @@ def test_dynamodb_outage(api_endpoint):
             data=json.dumps(create_quiz_payload)
         )
 
+        # Expecting a 500 error due to the outage
         assert response.status_code == 500
         response_data = response.json()
         assert "Error storing quiz data. It has been queued for retry." in response_data.get("message", "")
         print("Received expected error message during outage.")
 
-        check_outage_status(outage_payload)
-
-    finally:
-        stop_dynamodb_outage()
-
+    # After the context manager exits, the outage should be resolved
     print("Waiting for the system to process the queued request...")
     time.sleep(15)
 
+    # Check if the quiz was eventually created successfully
     response = requests.get(f"{api_endpoint}/listquizzes")
     assert response.status_code == 200
     quizzes_list = response.json().get('Quizzes', [])

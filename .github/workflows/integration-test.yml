@@ -40,7 +40,7 @@ jobs:
 
       - name: Set up Dependencies
         run: |
-          pip install requests boto3 pytest
+          pip install requests boto3 pytest localstack-sdk-python
 
       - name: Start LocalStack
         uses: LocalStack/setup-localstack@v0.2.3
