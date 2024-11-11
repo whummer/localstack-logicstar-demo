@@ -17,3 +17,7 @@ __pycache__
 # System
 
 .DS_STORE
+
+# LocalStack
+
+volume/
