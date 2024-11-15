@@ -1,3 +1,4 @@
+import MainLayout from './MainLayout';
 import React, { useState, useEffect } from 'react';
 import {
   TextField,
@@ -14,6 +15,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
+import { purple } from '@mui/material/colors';
 
 function HomePage() {
   const [quizID, setQuizID] = useState('');
@@ -73,84 +75,92 @@ function HomePage() {
   const pageURL = 'https://demo.localstack.cloud/';
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" gutterBottom>
-        Enter Quiz Details
-      </Typography>
+    <MainLayout>
+      <Container maxWidth="sm" className="main-quiz-container">
+        <Typography variant="h4" gutterBottom>
+          Welcome
+        </Typography>
 
-      {errorMessage && (
-        <Alert severity="error" sx={{ marginBottom: 2 }}>
-          {errorMessage}
-        </Alert>
-      )}
+        {errorMessage && (
+          <Alert severity="error" sx={{ marginBottom: 2 }}>
+            {errorMessage}
+          </Alert>
+        )}
 
-      {publicQuizzes.length > 0 ? (
-        <FormControl fullWidth margin="normal">
-          <InputLabel id="public-quiz-label">Select a Public Quiz</InputLabel>
-          <Select
-            labelId="public-quiz-label"
-            value={selectedQuizID}
-            label="Select a Public Quiz"
-            onChange={handleQuizSelect}
+        {publicQuizzes.length > 0 ? (
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="public-quiz-label">Select a Public Quiz</InputLabel>
+            <Select
+              labelId="public-quiz-label"
+              value={selectedQuizID}
+              label="Select a Public Quiz"
+              onChange={handleQuizSelect}
+            >
+              {publicQuizzes.map((quiz) => (
+                <MenuItem key={quiz.QuizID} value={quiz.QuizID}>
+                  {quiz.Title}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        ) : (
+          <Typography variant="body1" gutterBottom>
+            No public quizzes are available.
+          </Typography>
+        )}
+
+        <TextField
+          label="Quiz ID"
+          fullWidth
+          margin="normal"
+          value={quizID}
+          onChange={handleQuizIDChange}
+          disabled={selectedQuizID !== ''}
+        />
+        <TextField
+          label="Username"
+          fullWidth
+          margin="normal"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <TextField
+          label="Email (Optional)"
+          fullWidth
+          margin="normal"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <Stack spacing={2}>
+          <Button
+            variant="contained"
+            style={{ backgroundColor: purple[500], color: 'white' }}
+            onClick={handleStart}
+            disabled={!quizID || !username}
           >
-            {publicQuizzes.map((quiz) => (
-              <MenuItem key={quiz.QuizID} value={quiz.QuizID}>
-                {quiz.Title}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      ) : (
-        <Typography variant="body1" gutterBottom>
-          No public quizzes are available.
-        </Typography>
-      )}
-
-      <TextField
-        label="Quiz ID"
-        fullWidth
-        margin="normal"
-        value={quizID}
-        onChange={handleQuizIDChange}
-        disabled={selectedQuizID !== ''}
-      />
-      <TextField
-        label="Username"
-        fullWidth
-        margin="normal"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <TextField
-        label="Email (Optional)"
-        fullWidth
-        margin="normal"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-
-      <Stack spacing={2} marginTop={4}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleStart}
-          disabled={!quizID || !username}
-        >
-          Start Playing
-        </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handleCreateQuiz}
-        >
-          Create a New Quiz
-        </Button>
-      </Stack>
-
-      <Box sx={{ marginTop: 4, textAlign: 'center' }}>
-        <Typography variant="h6" gutterBottom>
-          Share this Page
-        </Typography>
+            Start Playing
+          </Button>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={handleCreateQuiz}
+          >
+            Create a New Quiz
+          </Button>
+        </Stack>
+      </Container>
+      <Box
+        sx={{
+          marginTop: 4,
+          textAlign: 'center',
+          backgroundColor: 'white',
+          width: 166,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          borderRadius: '4px',
+        }}
+      >
         <Box
           sx={{
             background: 'white',
@@ -160,8 +170,11 @@ function HomePage() {
         >
           <QRCode value={pageURL} size={128} />
         </Box>
+        <Typography variant="h6" gutterBottom>
+          Share this Page
+        </Typography>
       </Box>
-    </Container>
+    </MainLayout>
   );
 }
 
