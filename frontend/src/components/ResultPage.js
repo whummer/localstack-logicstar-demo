@@ -15,6 +15,9 @@ import {
   TableRow,
   Paper,
 } from '@mui/material';
+import QuizLayout from './QuizLayout';
+import QuizComplete from '../../src/QuizComplete.svg';
+import StarSharp from '../../src/StarSharp.svg';
 
 function ResultPage() {
   const { state } = useLocation();
@@ -47,7 +50,9 @@ function ResultPage() {
       });
 
     const fetchResult = () => {
-      fetch(`${process.env.REACT_APP_API_ENDPOINT}/getsubmission?submission_id=${submissionID}`)
+      fetch(
+        `${process.env.REACT_APP_API_ENDPOINT}/getsubmission?submission_id=${submissionID}`
+      )
         .then((res) => {
           if (!res.ok) {
             throw new Error('Result not ready yet.');
@@ -111,16 +116,26 @@ function ResultPage() {
   }
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ textAlign: 'center', marginTop: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Quiz Results
-        </Typography>
-        <Typography variant="h6" gutterBottom>
-          Total Score: {resultData.Score}
-        </Typography>
+    <QuizLayout>
+      <Container maxWidth="sm" className="main-quiz-container">
+        <img src={QuizComplete} alt="" />
         {resultData.UserAnswers && quizData.Questions && (
-          <Box sx={{ marginTop: 4 }}>
+          <Box sx={{ marginTop: 4, textAlign: 'center' }}>
+            <Typography variant="h4" gutterBottom>
+              Congratulations!<br></br>
+              You've completed the quiz
+            </Typography>
+            <Typography variant="h6" gutterBottom>
+              Your Score:
+            </Typography>
+            <div class="score">
+              <img
+                src={StarSharp}
+                alt="Score"
+                style={{ float: 'left', marginLeft: '10px' }}
+              />
+              {resultData.Score}
+            </div>
             <Typography variant="h5" gutterBottom>
               Detailed Results
             </Typography>
@@ -164,8 +179,8 @@ function ResultPage() {
             Go to Home
           </Button>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+    </QuizLayout>
   );
 }
 
