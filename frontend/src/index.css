@@ -21,6 +21,14 @@ code {
   display: block;
 }
 
+.quiz-header-img {
+  width: 100%;
+  max-width: 140px;
+  height: 100%;
+  margin: 16px auto;
+  display: block;
+}
+
 .main-quiz-container {
   border-radius: var(--borderRadius, 4px);
   background: var(--background-paper-elevation-2, #EAEAF0);
@@ -33,6 +41,21 @@ code {
   flex-direction: column;
   align-items: center;
   gap: var(--3, 12px);
+}
+
+.question-container {
+  border-radius: var(--borderRadius, 4px);
+  background-image: url('./assets/images/QuestionBg.png');
+  background-repeat:no-repeat;
+  background-size:contain;
+  background-position:center;
+  display: flex;
+  padding: 118px var(--5, 40px);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
 }
 
 .button {

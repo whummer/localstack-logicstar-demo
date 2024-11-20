@@ -10,7 +10,10 @@ import {
   CircularProgress,
   Box,
   LinearProgress,
+  Grid2 as Grid,
+  Alert,
 } from '@mui/material';
+import MainLayout from './QuizLayout';
 
 function QuizPage() {
   const { state } = useLocation();
@@ -124,9 +127,7 @@ function QuizPage() {
   const handleOptionChange = (e) => {
     const selectedOption = e.target.value;
     const timeTaken =
-      quizData && quizData.EnableTimer
-        ? quizData.TimerSeconds - timeLeft
-        : 0;
+      quizData && quizData.EnableTimer ? quizData.TimerSeconds - timeLeft : 0;
 
     setAnswers((prevAnswers) => ({
       ...prevAnswers,
@@ -163,79 +164,125 @@ function QuizPage() {
   const isTimeUp = quizData.EnableTimer && timeLeft <= 0;
 
   return (
-    <Container maxWidth="md">
-      <Typography variant="h4" gutterBottom>
-        {quizData.Title}
-      </Typography>
-      <Typography variant="subtitle1" gutterBottom>
-        Question {currentQuestionIndex + 1} of {quizData.Questions.length}
-      </Typography>
-
-      {quizData.EnableTimer && (
-        <Box sx={{ width: '100%', marginBottom: 2 }}>
-          <LinearProgress
-            variant="determinate"
-            value={(timeLeft / quizData.TimerSeconds) * 100}
-            sx={{ height: 10, borderRadius: 5 }}
-          />
-          <Typography variant="body2" color="textSecondary">
-            Time Left: {timeLeft} seconds
-          </Typography>
-        </Box>
-      )}
-
-      <Typography variant="h6" gutterBottom>
-        {currentQuestion.QuestionText}
-      </Typography>
-      <RadioGroup
-        name={`question-${currentQuestionIndex}`}
-        value={answers[currentQuestionIndex]?.Answer || ''}
-        onChange={handleOptionChange}
-      >
-        {currentQuestion.Options.map((option, idx) => (
-          <FormControlLabel
-            key={idx}
-            value={option}
-            control={<Radio />}
-            label={option}
-            disabled={isSubmitting || isTimeUp}
-          />
-        ))}
-      </RadioGroup>
-
-      {currentQuestion.Trivia && (
-        <Typography variant="body2" color="textSecondary" sx={{ marginTop: 2 }}>
-          Trivia: {currentQuestion.Trivia}
+    <MainLayout>
+      <Container maxWidth="sm" className="main-quiz-container">
+        <Typography variant="h6" gutterBottom align="left" width={'100%'}>
+          Question {currentQuestionIndex + 1} / {quizData.Questions.length}
         </Typography>
-      )}
 
-      {isSubmitting && (
-        <Box sx={{ textAlign: 'center', marginTop: 4 }}>
-          <CircularProgress />
-          <Typography variant="h6" sx={{ marginTop: 2 }}>
-            Submitting your answers...
+        <Container maxWidth={'100%'} className="question-container">
+          <Typography variant="h4" gutterBottom color="#EAEAF0" align="center">
+            {currentQuestion.QuestionText}
           </Typography>
-        </Box>
-      )}
+        </Container>
 
-      {!isSubmitting &&
-        quizData &&
-        currentQuestionIndex === quizData.Questions.length - 1 && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            disabled={
-              Object.keys(answers).length !== quizData.Questions.length ||
-              isSubmitting ||
-              isTimeUp
-            }
-            sx={{ marginTop: 4 }}
-          >
-            Submit Quiz
-          </Button>
+        {quizData.EnableTimer && (
+          <Box sx={{ width: '100%', textAlign: 'center' }}>
+            <Grid container spacing={2}>
+              <Typography variant="body2" color="textSecondary" width={'8%'}>
+                Time:
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                color="primary"
+                value={(timeLeft / quizData.TimerSeconds) * 100}
+                sx={{
+                  height: 5,
+                  borderRadius: 5,
+                  width: '78%',
+                  marginTop: '8px',
+                }}
+              />
+              <Typography variant="body2" color="textSecondary" width={'8%'}>
+                {timeLeft}
+              </Typography>
+            </Grid>
+          </Box>
         )}
-    </Container>
+        <RadioGroup
+          name={`question-${currentQuestionIndex}`}
+          value={answers[currentQuestionIndex]?.Answer || ''}
+          onChange={handleOptionChange}
+          sx={{ width: '100%' }}
+        >
+          {currentQuestion.Options.map((option, idx) => (
+            <FormControlLabel
+              key={idx}
+              value={option}
+              control={<Radio />}
+              label={option}
+              disabled={isSubmitting || isTimeUp}
+              sx={{
+                borderRadius: '4px',
+                border: '1px solid #D9DADF',
+                background: '#EAEAF0',
+                width: '100%',
+                margin: '4px',
+                textAlign: 'left',
+              }}
+            />
+          ))}
+        </RadioGroup>
+
+        {isSubmitting && (
+          <Box sx={{ textAlign: 'center', marginTop: 4 }}>
+            <CircularProgress />
+            <Typography variant="h6" sx={{ marginTop: 2 }}>
+              Submitting your answers...
+            </Typography>
+          </Box>
+        )}
+
+        {!isSubmitting &&
+          quizData &&
+          currentQuestionIndex === quizData.Questions.length - 1 && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSubmit}
+              disabled={
+                Object.keys(answers).length !== quizData.Questions.length ||
+                isSubmitting ||
+                isTimeUp
+              }
+              sx={{ marginTop: 4 }}
+            >
+              Submit Quiz
+            </Button>
+          )}
+      </Container>
+      {currentQuestion.Trivia && (
+        <Alert
+          severity="info"
+          sx={{
+            marginTop: 4,
+            textAlign: 'center',
+            backgroundColor: '#E6EAFF',
+            width: 320,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            borderRadius: '4px',
+          }}
+        >
+          <Typography
+            variant="h5"
+            color="textSecondary"
+            align="left"
+            sx={{ marginTop: 2 }}
+          >
+            Hint
+          </Typography>
+          <Typography
+            variant="body2"
+            align="left"
+            color="textSecondary"
+            sx={{ marginTop: 2 }}
+          >
+            {currentQuestion.Trivia}
+          </Typography>
+        </Alert>
+      )}
+    </MainLayout>
   );
 }
 
