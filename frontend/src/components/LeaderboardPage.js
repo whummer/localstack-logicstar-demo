@@ -14,6 +14,7 @@ import {
   Stack,
 } from '@mui/material';
 import QuizLayout from './QuizLayout';
+import StarSharp from '../../src/StarSharp.svg';
 
 function LeaderboardPage() {
   const { state } = useLocation();
@@ -88,11 +89,76 @@ function LeaderboardPage() {
 
   return (
     <QuizLayout>
-      <Container maxWidth="md">
-        <Box sx={{ textAlign: 'center', marginTop: 4 }}>
+      <Container maxWidth="sm" className="main-quiz-container">
+        <Box sx={{ textAlign: 'center', marginTop: 4, width: '100%' }}>
           <Typography variant="h4" gutterBottom>
-            Leaderboard
+            LEADERBOARD
           </Typography>
+          <div className="top-scores">
+            <div className="podium second-place">
+              <Typography
+                variant="h5"
+                gutterBottom
+                sx={{
+                  marginTop: '80px',
+                  marginLeft: 'auto',
+                  marginRight: 'auto',
+                }}
+              >
+                {leaderboardData[1].Username}
+              </Typography>
+              <div class="score">
+                <img
+                  src={StarSharp}
+                  alt="Score"
+                  style={{ float: 'left', marginLeft: '10px' }}
+                />
+                {leaderboardData[1].Score}
+              </div>
+            </div>
+            <div className="podium first-place">
+              <Typography
+                variant="h5"
+                gutterBottom
+                sx={{
+                  marginTop: '80px',
+                  marginLeft: 'auto',
+                  marginRight: 'auto',
+                }}
+              >
+                {leaderboardData[0].Username}
+              </Typography>
+              <div class="score">
+                <img
+                  src={StarSharp}
+                  alt="Score"
+                  style={{ float: 'left', marginLeft: '10px' }}
+                />
+                {leaderboardData[0].Score}
+              </div>
+            </div>
+            <div className="podium third-place">
+              <Typography
+                variant="h5"
+                gutterBottom
+                sx={{
+                  marginTop: '80px',
+                  marginLeft: 'auto',
+                  marginRight: 'auto',
+                }}
+              >
+                {leaderboardData[2].Username}
+              </Typography>
+              <div class="score">
+                <img
+                  src={StarSharp}
+                  alt="Score"
+                  style={{ float: 'left', marginLeft: '10px' }}
+                />
+                {leaderboardData[2].Score}
+              </div>
+            </div>
+          </div>
           {leaderboardData.length > 0 ? (
             <List component={Paper} sx={{ margin: '0 auto', maxWidth: 600 }}>
               {leaderboardData.map((entry, index) => (
