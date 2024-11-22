@@ -14,6 +14,9 @@ import {
   Alert,
 } from '@mui/material';
 import MainLayout from './QuizLayout';
+import Mascot1 from '../Mascot1.svg';
+import Mascot2 from '../Mascot2.svg';
+import Mascot3 from '../Mascot3.svg';
 
 function QuizPage() {
   const { state } = useLocation();
@@ -251,6 +254,23 @@ function QuizPage() {
             </Button>
           )}
       </Container>
+      <div className="character-container">
+        {currentQuestionIndex % 3 === 0 && (
+          <div className="character-box">
+            <img src={Mascot1} alt="Mascot" />
+          </div>
+        )}
+        {currentQuestionIndex % 3 === 1 && (
+          <div className="character-box-right">
+            <img src={Mascot2} alt="Mascot" />
+          </div>
+        )}
+        {currentQuestionIndex % 3 === 2 && (
+          <div className="character-box">
+            <img src={Mascot3} alt="Mascot" />
+          </div>
+        )}
+      </div>
       {currentQuestion.Trivia && (
         <Alert
           severity="info"

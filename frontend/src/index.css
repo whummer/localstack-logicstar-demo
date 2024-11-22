@@ -123,3 +123,23 @@ code {
   background-position: 50% 10%;
   background-repeat: no-repeat;
 }
+
+.character-container {
+  position: fixed;
+}
+
+.character-box {
+  width:175px;
+  height:175px;
+  position: relative;
+  bottom: 65px;
+  left: 200px;
+}
+
+.character-box-right {
+  width:175px;
+  height:175px;
+  position: relative;
+  bottom: 65px;
+  left: 800px;
+}
