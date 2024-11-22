@@ -128,7 +128,7 @@ function ResultPage() {
             <Typography variant="h6" gutterBottom>
               Your Score:
             </Typography>
-            <div class="score">
+            <div className="score">
               <img
                 src={StarSharp}
                 alt="Score"

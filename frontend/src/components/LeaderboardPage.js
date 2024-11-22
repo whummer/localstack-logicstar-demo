@@ -107,7 +107,7 @@ function LeaderboardPage() {
               >
                 {leaderboardData[1].Username}
               </Typography>
-              <div class="score">
+              <div className="score">
                 <img
                   src={StarSharp}
                   alt="Score"
@@ -128,7 +128,7 @@ function LeaderboardPage() {
               >
                 {leaderboardData[0].Username}
               </Typography>
-              <div class="score">
+              <div className="score">
                 <img
                   src={StarSharp}
                   alt="Score"
@@ -149,7 +149,7 @@ function LeaderboardPage() {
               >
                 {leaderboardData[2].Username}
               </Typography>
-              <div class="score">
+              <div className="score">
                 <img
                   src={StarSharp}
                   alt="Score"
