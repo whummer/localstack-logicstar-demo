@@ -3,7 +3,7 @@ import boto3
 from decimal import Decimal, getcontext
 
 def lambda_handler(event, context):
-    # raise Exception()
+    raise Exception()
     getcontext().prec = 6
 
     dynamodb = boto3.resource('dynamodb')

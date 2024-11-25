@@ -20,6 +20,6 @@ clean:          ## Clean up any temporary files
 	rm *.zip
 
 hot-reload:
-	awslocal lambda update-function-code --function-name ScoringFunction --s3-bucket hot-reload --s3-key "$(pwd)/lambdas/scoring"
+	awslocal lambda update-function-code --function-name ScoringFunction --s3-bucket hot-reload --s3-key "$$(pwd)/lambdas/scoring"
 
 .PHONY: usage deploy web save-state load-state clean
