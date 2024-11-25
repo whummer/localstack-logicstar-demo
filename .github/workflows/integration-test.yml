@@ -54,8 +54,7 @@ jobs:
 
       - name: Deploy infrastructure
         run: |
-          bash bin/deploy.sh
-          bash bin/seed.sh
+          ./bin/deploy.sh
 
       - name: Run Integration Tests
         env:

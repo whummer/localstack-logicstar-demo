@@ -286,8 +286,17 @@ log "State Machine created."
 # Deploy Frontend
 log "Deploying frontend..."
 pushd frontend >/dev/null
-npm install >/dev/null
+if [ -d "node_modules" ]; then
+    log "node_modules directory already present. Skipping npm install."
+else
+    log "node_modules directory not found. Installing dependencies..."
+    npm install >/dev/null
+fi
+
+log "Building the project..."
 npm run build >/dev/null
+
+log "Uploading frontend build to S3..."
 awslocal s3 mb s3://webapp >/dev/null
 awslocal s3 sync --delete ./build s3://webapp >/dev/null
 awslocal s3 website s3://webapp --index-document index.html --error-document index.html >/dev/null
@@ -365,6 +374,10 @@ log "SQS Queue Policy set."
 log "Cleaning up temporary files..."
 rm *.zip
 log "Cleanup completed."
+
+log "Starting seed process..."
+./bin/seed.sh
+log "Seed process completed successfully."
 
 # Final Output
 log "Deployment completed successfully."

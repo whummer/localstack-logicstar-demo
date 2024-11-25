@@ -40,7 +40,6 @@ export ENDPOINT_URL="$ENDPOINT_URL"
 
 echo "Deploying resources..."
 bash bin/deploy.sh > /dev/null 2>&1
-bash bin/seed.sh > /dev/null 2>&1
 echo "Deployment completed."
 
 DISTRIBUTION_ID=$(awslocal cloudfront list-distributions --endpoint-url="$ENDPOINT_URL" | jq -r '.DistributionList.Items[0].Id')

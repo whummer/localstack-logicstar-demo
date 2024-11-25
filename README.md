@@ -59,15 +59,7 @@ CloudFront URL: https://1e372b81.cloudfront.localhost.localstack.cloud
 API Gateway Endpoint: http://localhost:4566/restapis/4xu5emxibf/test/_user_request_
 ```
 
-Navigate to the CloudFront URL to check out the app.
-
-To seed some quiz data and user data, run the following command:
-
-```bash
-bash bin/seed.sh
-```
-
-The above command will add three quizzes to the app.
+Navigate to the CloudFront URL to check out the app. The script would also seed some quiz data and user data to make local testing easier.
 
 ## Local Testing
 
