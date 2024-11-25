@@ -220,7 +220,7 @@ log "Deploying API..."
 awslocal apigateway create-deployment \
     --rest-api-id $API_ID \
     --stage-name test >/dev/null
-API_ENDPOINT="http://localhost:4566/restapis/$API_ID/test/_user_request_"
+API_ENDPOINT="http://localhost:4566/_aws/execute-api/$API_ID/test/_user_request_"
 log "API deployed. Endpoint: $API_ENDPOINT"
 
 # SQS DLQ -> EventBridge Pipes -> SNS

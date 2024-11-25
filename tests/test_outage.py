@@ -28,7 +28,7 @@ def api_endpoint(apigateway_client):
         raise Exception(f"API {API_NAME} not found.")
 
     API_ID = api['id']
-    API_ENDPOINT = f"{LOCALSTACK_ENDPOINT}/restapis/{API_ID}/test/_user_request_"
+    API_ENDPOINT = f"{LOCALSTACK_ENDPOINT}/_aws/execute-api/{API_ID}/test/_user_request_"
 
     print(f"API Endpoint: {API_ENDPOINT}")
 
