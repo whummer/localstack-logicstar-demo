@@ -145,7 +145,7 @@ for LAMBDA_INFO in "${LAMBDAS[@]}"; do
   log "Creating Lambda function $FUNCTION_NAME..."
   awslocal lambda create-function \
       --function-name ${FUNCTION_NAME} \
-      --runtime python3.8 \
+      --runtime python3.10 \
       --handler handler.lambda_handler \
       --zip-file fileb://${ZIP_FILE} \
       --role arn:aws:iam::000000000000:role/${ROLE_NAME} \
