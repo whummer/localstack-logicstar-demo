@@ -20,7 +20,7 @@ import { purple } from '@mui/material/colors';
 function HomePage() {
   const [quizID, setQuizID] = useState('');
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('demo@gmail.com');
   const [publicQuizzes, setPublicQuizzes] = useState([]);
   const [selectedQuizID, setSelectedQuizID] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -126,6 +126,8 @@ function HomePage() {
         />
         <TextField
           label="Email (Optional)"
+          type="email"
+          autoComplete="email"
           fullWidth
           margin="normal"
           value={email}
