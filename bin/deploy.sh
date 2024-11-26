@@ -244,6 +244,7 @@ log "SQS Redrive Policy configured."
 # Verify Email Identity for SES
 log "Verifying email identity for SES..."
 awslocal ses verify-email-identity --email your.email@example.com >/dev/null
+awslocal ses verify-email-identity --email admin@localstack.com >/dev/null
 log "Email identity verified. Check your email to confirm."
 
 # Subscribe Email to SNS Topic
