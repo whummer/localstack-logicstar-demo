@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -56,47 +56,50 @@ function QuizPage() {
       });
   }, [quizID, username, navigate]);
 
-  const handleSubmit = (timerExceeded = false, submissionAnswers = answers) => {
-    if (hasSubmittedRef.current) return;
-    hasSubmittedRef.current = true;
+  const handleSubmit = useCallback(
+    (timerExceeded = false, submissionAnswers = answers) => {
+      if (hasSubmittedRef.current) return;
+      hasSubmittedRef.current = true;
 
-    setIsSubmitting(true);
-    const submissionData = {
-      Username: username,
-      QuizID: quizID,
-      Answers: submissionAnswers,
-    };
-    if (email) {
-      submissionData.Email = email;
-    }
-    if (timerExceeded) {
-      submissionData.TimerExceeded = true;
-    }
+      setIsSubmitting(true);
+      const submissionData = {
+        Username: username,
+        QuizID: quizID,
+        Answers: submissionAnswers,
+      };
+      if (email) {
+        submissionData.Email = email;
+      }
+      if (timerExceeded) {
+        submissionData.TimerExceeded = true;
+      }
 
-    fetch(`${process.env.REACT_APP_API_ENDPOINT}/submitquiz`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(submissionData),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        navigate('/result', {
-          state: { submissionID: data.SubmissionID, quizID },
-        });
+      fetch(`${process.env.REACT_APP_API_ENDPOINT}/submitquiz`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData),
       })
-      .catch((err) => {
-        console.error('Error submitting quiz:', err);
-        alert('Failed to submit quiz. Please try again.');
-        setIsSubmitting(false);
-        hasSubmittedRef.current = false;
-      });
-  };
+        .then((res) => res.json())
+        .then((data) => {
+          navigate('/result', {
+            state: { submissionID: data.SubmissionID, quizID },
+          });
+        })
+        .catch((err) => {
+          console.error('Error submitting quiz:', err);
+          alert('Failed to submit quiz. Please try again.');
+          setIsSubmitting(false);
+          hasSubmittedRef.current = false;
+        });
+    },
+    [answers, email, navigate, quizID, username]
+  );
 
-  const moveToNextQuestion = () => {
+  const moveToNextQuestion = useCallback(() => {
     if (quizData && currentQuestionIndex < quizData.Questions.length - 1) {
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
     }
-  };
+  }, [quizData, currentQuestionIndex]);
 
   const handleSkip = () => {
     const timeTaken =
@@ -171,7 +174,7 @@ function QuizPage() {
 
       return () => clearInterval(timerRef.current);
     }
-  }, [currentQuestionIndex, quizData]);
+  }, [currentQuestionIndex, quizData, moveToNextQuestion, handleSubmit]);
 
   const handleOptionChange = (e) => {
     const selectedOption = e.target.value;
@@ -194,8 +197,6 @@ function QuizPage() {
     if (currentQuestionIndex < quizData.Questions.length - 1) {
       moveToNextQuestion();
     } else {
-      // Do not auto-submit on the last question
-      // Start the timer for the last question
       if (quizData.EnableTimer) {
         setTimeLeft(quizData.TimerSeconds);
         questionStartTimeRef.current = Date.now();
