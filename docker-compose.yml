@@ -17,9 +17,7 @@ services:
       - DISABLE_CUSTOM_CORS_APIGATEWAY=1 
       - DISABLE_CUSTOM_CORS_S3=1
       # To setup the LocalStack Extensions
-      - EXTENSION_AUTO_INSTALL=git+https://${GITHUB_TOKEN}@github.com/localstack/localstack-extension-event-studio/, localstack-extension-mailhog
+      - EXTENSION_AUTO_INSTALL=localstack-extension-event-studio, localstack-extension-mailhog
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
-    env_file:
-      - .env
