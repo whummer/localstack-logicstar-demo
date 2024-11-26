@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -56,63 +56,61 @@ function QuizPage() {
       });
   }, [quizID, username, navigate]);
 
-  const handleSubmit = useCallback(
-    (timerExceeded = false) => {
-      if (hasSubmittedRef.current) return;
-      hasSubmittedRef.current = true;
+  const handleSubmit = (timerExceeded = false, submissionAnswers = answers) => {
+    if (hasSubmittedRef.current) return;
+    hasSubmittedRef.current = true;
 
-      setIsSubmitting(true);
-      const submissionData = {
-        Username: username,
-        QuizID: quizID,
-        Answers: answers,
-      };
-      if (email) {
-        submissionData.Email = email;
-      }
-      if (timerExceeded) {
-        submissionData.TimerExceeded = true;
-      }
+    setIsSubmitting(true);
+    const submissionData = {
+      Username: username,
+      QuizID: quizID,
+      Answers: submissionAnswers,
+    };
+    if (email) {
+      submissionData.Email = email;
+    }
+    if (timerExceeded) {
+      submissionData.TimerExceeded = true;
+    }
 
-      fetch(`${process.env.REACT_APP_API_ENDPOINT}/submitquiz`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          navigate('/result', {
-            state: { submissionID: data.SubmissionID, quizID },
-          });
-        })
-        .catch((err) => {
-          console.error('Error submitting quiz:', err);
-          alert('Failed to submit quiz. Please try again.');
-          setIsSubmitting(false);
-          hasSubmittedRef.current = false;
+    fetch(`${process.env.REACT_APP_API_ENDPOINT}/submitquiz`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(submissionData),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        navigate('/result', {
+          state: { submissionID: data.SubmissionID, quizID },
         });
-    },
-    [username, quizID, answers, email, navigate]
-  );
+      })
+      .catch((err) => {
+        console.error('Error submitting quiz:', err);
+        alert('Failed to submit quiz. Please try again.');
+        setIsSubmitting(false);
+        hasSubmittedRef.current = false;
+      });
+  };
 
-  const moveToNextQuestion = useCallback(() => {
+  const moveToNextQuestion = () => {
     if (quizData && currentQuestionIndex < quizData.Questions.length - 1) {
       setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
     }
-  }, [quizData, currentQuestionIndex]);
+  };
 
   const handleSkip = () => {
     const timeTaken =
       quizData && quizData.EnableTimer ? quizData.TimerSeconds - timeLeft : 0;
 
-    setAnswers((prevAnswers) => ({
-      ...prevAnswers,
+    const updatedAnswers = {
+      ...answers,
       [currentQuestionIndex]: {
         Answer: '',
         TimeTaken: timeTaken,
         Skipped: true,
       },
-    }));
+    };
+    setAnswers(updatedAnswers);
 
     if (quizData && quizData.EnableTimer && timerRef.current) {
       clearInterval(timerRef.current);
@@ -122,7 +120,7 @@ function QuizPage() {
       moveToNextQuestion();
     } else {
       if (!hasSubmittedRef.current) {
-        handleSubmit();
+        handleSubmit(false, updatedAnswers);
       }
     }
   };
@@ -138,21 +136,26 @@ function QuizPage() {
 
       const handleTimeUp = () => {
         const timeTaken = quizData.TimerSeconds;
-        setAnswers((prevAnswers) => ({
-          ...prevAnswers,
-          [currentQuestionIndex]: {
-            Answer: prevAnswers[currentQuestionIndex]?.Answer || '',
-            TimeTaken: timeTaken,
-          },
-        }));
 
-        if (currentQuestionIndex < quizData.Questions.length - 1) {
-          moveToNextQuestion();
-        } else {
-          if (!hasSubmittedRef.current) {
-            handleSubmit(true);
+        setAnswers((prevAnswers) => {
+          const updatedAnswers = {
+            ...prevAnswers,
+            [currentQuestionIndex]: {
+              Answer: prevAnswers[currentQuestionIndex]?.Answer || '',
+              TimeTaken: timeTaken,
+            },
+          };
+
+          if (currentQuestionIndex < quizData.Questions.length - 1) {
+            moveToNextQuestion();
+          } else {
+            if (!hasSubmittedRef.current) {
+              handleSubmit(true, updatedAnswers);
+            }
           }
-        }
+
+          return updatedAnswers;
+        });
       };
 
       timerRef.current = setInterval(() => {
@@ -168,20 +171,21 @@ function QuizPage() {
 
       return () => clearInterval(timerRef.current);
     }
-  }, [currentQuestionIndex, quizData, moveToNextQuestion, handleSubmit]);
+  }, [currentQuestionIndex, quizData]);
 
   const handleOptionChange = (e) => {
     const selectedOption = e.target.value;
     const timeTaken =
       quizData && quizData.EnableTimer ? quizData.TimerSeconds - timeLeft : 0;
 
-    setAnswers((prevAnswers) => ({
-      ...prevAnswers,
+    const updatedAnswers = {
+      ...answers,
       [currentQuestionIndex]: {
         Answer: selectedOption,
         TimeTaken: timeTaken,
       },
-    }));
+    };
+    setAnswers(updatedAnswers);
 
     if (quizData && quizData.EnableTimer && timerRef.current) {
       clearInterval(timerRef.current);
@@ -190,8 +194,11 @@ function QuizPage() {
     if (currentQuestionIndex < quizData.Questions.length - 1) {
       moveToNextQuestion();
     } else {
-      if (!hasSubmittedRef.current) {
-        handleSubmit();
+      // Do not auto-submit on the last question
+      // Start the timer for the last question
+      if (quizData.EnableTimer) {
+        setTimeLeft(quizData.TimerSeconds);
+        questionStartTimeRef.current = Date.now();
       }
     }
   };
@@ -216,7 +223,11 @@ function QuizPage() {
 
   return (
     <MainLayout>
-      <Container maxWidth="sm" className="main-quiz-container" sx={{ position: 'relative' }}>
+      <Container
+        maxWidth="sm"
+        className="main-quiz-container"
+        sx={{ position: 'relative' }}
+      >
         {/* Skip Button at Top Right */}
         {!isSubmitting && (
           <IconButton
@@ -287,18 +298,19 @@ function QuizPage() {
           ))}
         </RadioGroup>
 
-        {!isSubmitting && currentQuestionIndex === quizData.Questions.length - 1 && (
-          <Box sx={{ textAlign: 'center', marginTop: 4 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-              disabled={isSubmitting || isTimeUp}
-            >
-              Submit Quiz
-            </Button>
-          </Box>
-        )}
+        {!isSubmitting &&
+          currentQuestionIndex === quizData.Questions.length - 1 && (
+            <Box sx={{ textAlign: 'center', marginTop: 4 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => handleSubmit(false, answers)}
+                disabled={isSubmitting || isTimeUp}
+              >
+                Submit Quiz
+              </Button>
+            </Box>
+          )}
 
         {isSubmitting && (
           <Box sx={{ textAlign: 'center', marginTop: 4 }}>
