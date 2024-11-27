@@ -37,7 +37,8 @@ jobs:
           pip install awscli awscli-local
 
       - name: Run Ephemeral Script and Capture Output
-        run: |      
+        run: |
+          pip3 install localstack
           OUTPUT=$(bash bin/ephemeral.sh 2>&1)
           echo "$OUTPUT"
           NEW_URL=$(echo "$OUTPUT" | grep -Eo 'https://ls-[^ ]+')
