@@ -139,11 +139,21 @@ For testing the app within the GitHub Actions workflow, you can refer to the pro
 
 Visit the [IAM Policy Stream](https://app.localstack.cloud/inst/default/policy-stream) to view the permissions required for each API call. This feature enables you to explore and progressively enhance security as your application develops.
 
-To get started, restart the LocalStack container using the command `localstack restart` and load the Cloud Pod. Then, click on **Enable**.
+To get started, restart the LocalStack container using the command `localstack restart` and load the Cloud Pod. Then, click on **Enable Stream**. You can un-select **Show internal calls** to prevent IAM policies that are unnecessary for the demo. 
 
-> Add **SQS** in the **Exclude Services** dropdown. This step filters out background API calls that aren't necessary for the demo.
+Toggle **Enforce IAM Policies** to enable strict IAM enforcement. For demo purpose, the following policy statement has been removed from the `configurations/submit_quiz_policy.json`:
+
+```json
+{
+    "Effect": "Allow",
+    "Action": ["sqs:GetQueueUrl", "sqs:SendMessage"],
+    "Resource": "arn:aws:sqs:us-east-1:000000000000:QuizSubmissionQueue"
+}
+```
 
 Engage with the application or run tests to generate a policy stream for various services. During this process, you may notice some **IAM Violations**. These are intentionally included to demonstrate how the IAM Policy Stream can be used to test policies in a secure developer setting, helping to identify and resolve missing policies to ensure everything works in production environments.
+
+Find the missing policy statements and fix the IAM Policy on the [IAM Resource Browser](https://app.localstack.cloud/inst/default/resources/iam/roles) (for `SubmitQuizRole`) or patch it locally and update the policy using AWS CLI.
 
 ## Chaos Engineering
 

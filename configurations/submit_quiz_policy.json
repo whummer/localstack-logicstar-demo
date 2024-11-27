@@ -8,16 +8,6 @@
       },
       {
         "Effect": "Allow",
-        "Action": ["sqs:GetQueueUrl", "sqs:GetQueueAttributes"],
-        "Resource": "*"
-      },
-      {
-        "Effect": "Allow",
-        "Action": "sqs:SendMessage",
-        "Resource": "arn:aws:sqs:us-east-1:000000000000:QuizSubmissionQueue"
-      },
-      {
-        "Effect": "Allow",
         "Action": [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
