@@ -47,9 +47,9 @@ jobs:
             echo "Error: Failed to extract URL from script output."
             exit 1
           fi
-          
+
+          NEW_URL="${NEW_URL}#"
           echo "Extracted URL: $NEW_URL"
-          
           echo "NEW_URL=$NEW_URL" >> $GITHUB_ENV
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
