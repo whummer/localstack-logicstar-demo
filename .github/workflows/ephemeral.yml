@@ -39,8 +39,9 @@ jobs:
       - name: Run Ephemeral Script and Capture Output
         run: |
           pip3 install localstack
-          OUTPUT=$(bash bin/ephemeral.sh 2>&1)
-          echo "$OUTPUT"
+          bash bin/ephemeral.sh 2>&1 | tee output.log
+
+          OUTPUT=$(cat output.log)
           NEW_URL=$(echo "$OUTPUT" | grep -Eo 'https://ls-[^ ]+')
           
           if [ -z "$NEW_URL" ]; then
@@ -79,7 +80,6 @@ jobs:
           </body>
           </html>
           EOL
-
       - name: Switch to gh-pages Branch and Commit Changes
         run: |
           git fetch origin gh-pages || echo "gh-pages branch does not exist; creating it."
