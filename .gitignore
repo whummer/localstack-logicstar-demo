@@ -22,3 +22,5 @@ __pycache__
 
 volume/
 .idea
+
+cdk.context.json
