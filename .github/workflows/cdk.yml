@@ -68,6 +68,19 @@ jobs:
           awslocal dynamodb list-tables
           awslocal s3 ls
 
+      - name: Set up test dependencies
+        run: |
+          pip install requests boto3 pytest localstack-sdk-python
+
+      - name: Run Integration Tests
+        env:
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        run: |
+          pytest tests/test_infra.py
+
       - name: Send a Slack notification
         if: failure() || github.event_name != 'pull_request'
         uses: ravsamhq/notify-slack-action@v2

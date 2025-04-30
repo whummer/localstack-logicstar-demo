@@ -156,11 +156,26 @@ def test_quiz_workflow(api_endpoint):
 
     time.sleep(5)
 
-    response = requests.get(f"{api_endpoint}/getleaderboard?quiz_id={quiz_id}&top=3")
-    assert response.status_code == 200
-    leaderboard = response.json()
-    assert len(leaderboard) == 3
+    leaderboard_url = f"{api_endpoint}/getleaderboard?quiz_id={quiz_id}&top=3"
+    response = requests.get(leaderboard_url)
+    leaderboard = None
 
+    if response.json():
+        assert response.status_code == 200
+        leaderboard = response.json()
+    else:
+        # If the response is empty, retry it for 5 times with a 2 second delay.
+        # TODO: This is a hack to get around the fact that the leaderboard is not available immediately.
+        for _ in range(5):
+            time.sleep(2)
+            response = requests.get(leaderboard_url)
+            if response.json():
+                assert response.status_code == 200
+                leaderboard = response.json()
+                break
+
+    assert leaderboard is not None, "Failed to retrieve leaderboard data after retries"
+    assert len(leaderboard) == 3
     expected_scores = {
         "user1": None,
         "user2": None,
