@@ -1,0 +1,90 @@
+name: End-to-End Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # “At 00:00 on Sunday.”
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+jobs:
+  e2e-tests:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+    
+    - name: Start LocalStack
+      uses: LocalStack/setup-localstack@main
+      with:
+        image-tag: 'latest'
+        use-pro: 'true'
+        configuration: LS_LOG=trace
+        install-awslocal: 'true'
+      env:
+        LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+
+    - name: Deploy infrastructure
+      run: |
+        ./bin/deploy.sh
+    
+    - name: Install Playwright
+      run: |
+        cd tests/e2e
+        pip install -r requirements.txt
+        playwright install chromium
+        playwright install-deps chromium
+    
+    - name: Run E2E Tests
+      run: |
+        cd tests/e2e
+        pytest -s test_quiz_flow.py
+      env:
+        AWS_DEFAULT_REGION: us-east-1
+        AWS_ACCESS_KEY_ID: test
+        AWS_SECRET_ACCESS_KEY: test
+
+    - name: Show localstack logs
+      if: always()
+      run: |
+        localstack logs
+
+    - name: Send a Slack notification
+      if: failure() || github.event_name != 'pull_request'
+      uses: ravsamhq/notify-slack-action@v2
+      with:
+        status: ${{ job.status }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+        notification_title: "{workflow} has {status_message}"
+        message_format: "{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}>"
+        footer: "Linked Repo <{repo_url}|{repo}> | <{run_url}|View Workflow run>"
+        notify_when: "failure"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    - name: Generate a Diagnostic Report
+      if: failure()
+      run: |
+        curl -s localhost:4566/_localstack/diagnose | gzip -cf > diagnose.json.gz
+
+    - name: Upload the Diagnostic Report
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: diagnose.json.gz
+        path: ./diagnose.json.gz
