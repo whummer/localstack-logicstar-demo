@@ -43,14 +43,14 @@ jobs:
           pip install requests boto3 pytest localstack-sdk-python
 
       - name: Start LocalStack
-        uses: LocalStack/setup-localstack@v0.2.3
+        uses: LocalStack/setup-localstack@main
         with:
           image-tag: 'latest'
           use-pro: 'true'
           configuration: LS_LOG=trace
           install-awslocal: 'true'
         env:
-          LOCALSTACK_API_KEY: ${{ secrets.LOCALSTACK_API_KEY }}
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
 
       - name: Deploy infrastructure
         run: |
@@ -71,6 +71,7 @@ jobs:
           AWS_REGION: us-east-1
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
         run: |
           pytest tests/test_outage.py
 
