@@ -29,7 +29,7 @@ def lambda_handler(event, context):
         items = response.get('Items', [])
         leaderboard = [
             {
-                'Username': item['Username'],
+                'Username': item['username'],
                 'Score': float(item['Score']),
                 'SubmissionID': item['SubmissionID']
             } for item in items
